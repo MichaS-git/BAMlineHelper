@@ -1,0 +1,231 @@
+Mon Nov 16 21:21:02 2020 DCM - controller started
+Mon Nov 16 21:21:11 2020 DCM - controller activated
+normed Signal to hold 5.64817e-08
+Mon Nov 16 22:12:51 2020 low signal detected: 94.93%
+Mon Nov 16 22:12:52 2020 tweaking once forward to get the right direction...
+Mon Nov 16 22:12:54 2020 yes, tweaking forward is the right direction!
+Mon Nov 16 22:12:54 2020 the normed signal is: 5.43262e-08
+tweaking forward
+Mon Nov 16 22:12:56 2020 the new normed signal is: 5.55966e-08
+Mon Nov 16 22:12:56 2020 the normed signal is: 5.55966e-08
+tweaking forward
+Mon Nov 16 22:12:58 2020 the new normed signal is: 5.63883e-08
+Mon Nov 16 22:12:58 2020 the normed signal is: 5.63883e-08
+tweaking forward
+Mon Nov 16 22:13:00 2020 the new normed signal is: 5.66283e-08
+Mon Nov 16 22:13:00 2020 the normed signal is: 5.66283e-08
+tweaking forward
+Mon Nov 16 22:13:02 2020 the new normed signal is: 5.61982e-08
+tweaking once back...
+Mon Nov 16 22:13:04 2020 the new normed signal to hold is: 5.66309e-08
+Mon Nov 16 22:53:52 2020 low signal detected: 94.99%
+Mon Nov 16 22:53:52 2020 tweaking once forward to get the right direction...
+Mon Nov 16 22:53:54 2020 yes, tweaking forward is the right direction!
+Mon Nov 16 22:53:54 2020 the normed signal is: 5.51759e-08
+tweaking forward
+Mon Nov 16 22:53:56 2020 the new normed signal is: 5.61828e-08
+Mon Nov 16 22:53:56 2020 the normed signal is: 5.61828e-08
+tweaking forward
+Mon Nov 16 22:53:58 2020 the new normed signal is: 5.66626e-08
+Mon Nov 16 22:53:58 2020 the normed signal is: 5.66626e-08
+tweaking forward
+Mon Nov 16 22:54:00 2020 the new normed signal is: 5.64797e-08
+tweaking once back...
+Mon Nov 16 22:54:02 2020 the new normed signal to hold is: 5.66797e-08
+Mon Nov 16 23:50:12 2020 low signal detected: 94.81%
+Mon Nov 16 23:50:12 2020 tweaking once forward to get the right direction...
+Mon Nov 16 23:50:14 2020 yes, tweaking forward is the right direction!
+Mon Nov 16 23:50:14 2020 the normed signal is: 5.50728e-08
+tweaking forward
+Mon Nov 16 23:50:16 2020 the new normed signal is: 5.61302e-08
+Mon Nov 16 23:50:16 2020 the normed signal is: 5.61302e-08
+tweaking forward
+Mon Nov 16 23:50:18 2020 the new normed signal is: 5.66597e-08
+Mon Nov 16 23:50:18 2020 the normed signal is: 5.66597e-08
+tweaking forward
+Mon Nov 16 23:50:20 2020 the new normed signal is: 5.65478e-08
+tweaking once back...
+Mon Nov 16 23:50:22 2020 the new normed signal to hold is: 5.66819e-08
+Tue Nov 17 10:28:52 2020 low signal detected: 74.46%
+Tue Nov 17 10:28:52 2020 tweaking once forward to get the right direction...
+Tue Nov 17 10:28:54 2020 yes, tweaking forward is the right direction!
+Tue Nov 17 10:28:54 2020 the normed signal is: 4.41724e-08
+tweaking forward
+Tue Nov 17 10:28:56 2020 the new normed signal is: 4.60714e-08
+Tue Nov 17 10:28:56 2020 the normed signal is: 4.60714e-08
+tweaking forward
+Tue Nov 17 10:28:58 2020 the new normed signal is: 4.79542e-08
+Tue Nov 17 10:28:58 2020 the normed signal is: 4.79542e-08
+tweaking forward
+Tue Nov 17 10:29:00 2020 the new normed signal is: 4.97313e-08
+Tue Nov 17 10:29:00 2020 the normed signal is: 4.97313e-08
+tweaking forward
+Tue Nov 17 10:29:02 2020 the new normed signal is: 5.14279e-08
+Tue Nov 17 10:29:02 2020 the normed signal is: 5.14279e-08
+tweaking forward
+Tue Nov 17 10:29:04 2020 the new normed signal is: 5.29509e-08
+Tue Nov 17 10:29:04 2020 the normed signal is: 5.29509e-08
+tweaking forward
+Tue Nov 17 10:29:06 2020 the new normed signal is: 5.43334e-08
+Tue Nov 17 10:29:06 2020 the normed signal is: 5.43334e-08
+tweaking forward
+Tue Nov 17 10:29:08 2020 the new normed signal is: 5.53091e-08
+Tue Nov 17 10:29:08 2020 the normed signal is: 5.53091e-08
+tweaking forward
+Tue Nov 17 10:29:10 2020 the new normed signal is: 5.57855e-08
+Tue Nov 17 10:29:10 2020 the normed signal is: 5.57855e-08
+tweaking forward
+Tue Nov 17 10:29:12 2020 the new normed signal is: 5.56345e-08
+tweaking once back...
+Tue Nov 17 10:29:14 2020 the new normed signal to hold is: 5.58249e-08
+Tue Nov 17 10:34:45 2020 DCM - controller terminated
+Tue Nov 17 10:35:15 2020 DCM - controller activated
+normed Signal to hold 5.65086e-08
+Tue Nov 17 10:46:15 2020 low signal detected: 94.30%
+Tue Nov 17 10:46:15 2020 tweaking once forward to get the right direction...
+Tue Nov 17 10:46:17 2020 nope, now tweaking twice reverse...
+Tue Nov 17 10:46:20 2020 yes, tweaking reverse is the right direction!
+Tue Nov 17 10:46:20 2020 the normed signal is: 5.42159e-08
+tweaking forward
+Tue Nov 17 10:46:22 2020 the new normed signal is: 5.36365e-08
+tweaking once back...
+tweaking once forward...
+Tue Nov 17 10:46:26 2020 the new normed signal to hold is: 5.43830e-08
+Tue Nov 17 11:48:55 2020 low signal detected: 94.77%
+Tue Nov 17 11:48:55 2020 tweaking once forward to get the right direction...
+Tue Nov 17 11:48:57 2020 yes, tweaking forward is the right direction!
+Tue Nov 17 11:48:57 2020 the normed signal is: 5.27602e-08
+tweaking forward
+Tue Nov 17 11:48:59 2020 the new normed signal is: 5.44019e-08
+Tue Nov 17 11:48:59 2020 the normed signal is: 5.44019e-08
+tweaking forward
+Tue Nov 17 11:49:01 2020 the new normed signal is: 5.34721e-08
+tweaking once back...
+tweaking once forward...
+Tue Nov 17 11:49:05 2020 the new normed signal to hold is: 5.43666e-08
+Tue Nov 17 11:50:55 2020 low signal detected: 91.62%
+Tue Nov 17 11:50:55 2020 tweaking once forward to get the right direction...
+Tue Nov 17 11:50:57 2020 yes, tweaking forward is the right direction!
+Tue Nov 17 11:50:57 2020 the normed signal is: 5.34818e-08
+tweaking forward
+Tue Nov 17 11:50:59 2020 the new normed signal is: 5.23184e-08
+tweaking once back...
+tweaking once forward...
+Tue Nov 17 11:51:03 2020 the new normed signal to hold is: 5.09831e-08
+Tue Nov 17 12:00:36 2020 DCM - controller terminated
+Tue Nov 17 12:01:02 2020 DCM - controller activated
+normed Signal to hold 5.09831e-08
+Tue Nov 17 12:31:17 2020 DCM - controller terminated
+Tue Nov 17 15:07:34 2020 DCM - controller activated
+normed Signal to hold 5.68371e-08
+Tue Nov 17 15:11:14 2020 low signal detected: 84.42%
+Tue Nov 17 15:11:14 2020 tweaking once forward to get the right direction...
+Tue Nov 17 15:11:17 2020 yes, tweaking forward is the right direction!
+Tue Nov 17 15:11:17 2020 the normed signal is: 5.55037e-08
+tweaking forward
+Tue Nov 17 15:11:19 2020 the new normed signal is: 5.41113e-08
+tweaking once back...
+tweaking once forward...
+Tue Nov 17 15:11:23 2020 the new normed signal to hold is: 5.51074e-08
+Tue Nov 17 17:07:56 2020 DCM - controller terminated
+Tue Nov 17 20:13:45 2020 DCM - controller activated
+normed Signal to hold 5.68913e-08
+Tue Nov 17 22:14:45 2020 low signal detected: 94.21%
+Tue Nov 17 22:14:45 2020 tweaking once forward to get the right direction...
+Tue Nov 17 22:14:47 2020 yes, tweaking forward is the right direction!
+Tue Nov 17 22:14:47 2020 the normed signal is: 5.50172e-08
+tweaking forward
+Tue Nov 17 22:14:49 2020 the new normed signal is: 5.61367e-08
+Tue Nov 17 22:14:49 2020 the normed signal is: 5.61367e-08
+tweaking forward
+Tue Nov 17 22:14:51 2020 the new normed signal is: 5.68269e-08
+Tue Nov 17 22:14:51 2020 the normed signal is: 5.68269e-08
+tweaking forward
+Tue Nov 17 22:14:53 2020 the new normed signal is: 5.68765e-08
+Tue Nov 17 22:14:53 2020 the normed signal is: 5.68765e-08
+tweaking forward
+Tue Nov 17 22:14:55 2020 the new normed signal is: 5.62464e-08
+tweaking once back...
+tweaking once forward...
+Tue Nov 17 22:14:59 2020 the new normed signal to hold is: 5.62234e-08
+Tue Nov 17 22:17:44 2020 DCM - controller terminated
+Tue Nov 17 22:45:51 2020 DCM - controller activated
+normed Signal to hold 5.62234e-08
+Tue Nov 17 23:42:30 2020 DCM - controller terminated
+Wed Nov 18 12:20:11 2020 DCM - controller activated
+normed Signal to hold 5.65140e-08
+Wed Nov 18 13:15:11 2020 low signal detected: 94.94%
+Wed Nov 18 13:15:11 2020 tweaking once forward to get the right direction...
+Wed Nov 18 13:15:13 2020 yes, tweaking forward is the right direction!
+Wed Nov 18 13:15:13 2020 the normed signal is: 5.50153e-08
+tweaking forward
+Wed Nov 18 13:15:15 2020 the new normed signal is: 5.61145e-08
+Wed Nov 18 13:15:15 2020 the normed signal is: 5.61145e-08
+tweaking forward
+Wed Nov 18 13:15:17 2020 the new normed signal is: 5.67109e-08
+Wed Nov 18 13:15:17 2020 the normed signal is: 5.67109e-08
+tweaking forward
+Wed Nov 18 13:15:19 2020 the new normed signal is: 5.67165e-08
+Wed Nov 18 13:15:19 2020 the normed signal is: 5.67165e-08
+tweaking forward
+Wed Nov 18 13:15:21 2020 the new normed signal is: 5.60402e-08
+tweaking once back...
+tweaking once forward...
+Wed Nov 18 13:15:25 2020 the new normed signal to hold is: 5.60269e-08
+Wed Nov 18 14:08:42 2020 DCM - controller terminated
+Wed Nov 18 15:06:28 2020 DCM - controller activated
+normed Signal to hold 9.02719e-09
+Wed Nov 18 16:59:28 2020 low signal detected: 94.95%
+Wed Nov 18 16:59:28 2020 tweaking once forward to get the right direction...
+Wed Nov 18 16:59:30 2020 yes, tweaking forward is the right direction!
+Wed Nov 18 16:59:30 2020 the normed signal is: 8.91669e-09
+tweaking forward
+Wed Nov 18 16:59:32 2020 the new normed signal is: 9.04130e-09
+Wed Nov 18 16:59:32 2020 the normed signal is: 9.04130e-09
+tweaking forward
+Wed Nov 18 16:59:34 2020 the new normed signal is: 8.89910e-09
+tweaking once back...
+tweaking once forward...
+Wed Nov 18 16:59:38 2020 the new normed signal to hold is: 8.89213e-09
+Wed Nov 18 18:05:26 2020 DCM - controller terminated
+Wed Nov 18 18:05:58 2020 DCM - controller activated
+normed Signal to hold 9.02079e-09
+Wed Nov 18 19:54:35 2020 DCM - controller terminated
+Wed Nov 18 21:01:32 2020 DCM - controller activated
+normed Signal to hold 8.99916e-09
+Wed Nov 18 21:49:14 2020 DCM - controller terminated
+Thu Nov 19 12:33:51 2020 DCM - controller activated
+normed Signal to hold 1.13918e-09
+Thu Nov 19 12:33:59 2020 DCM - controller terminated
+Thu Nov 19 12:34:09 2020 DCM - controller activated
+normed Signal to hold 1.13237e-09
+Thu Nov 19 12:50:28 2020 DCM - controller terminated
+Thu Nov 19 12:51:17 2020 DCM - controller activated
+normed Signal to hold 1.13237e-09
+Thu Nov 19 12:51:24 2020 DCM - controller terminated
+Thu Nov 19 12:51:27 2020 DCM - controller activated
+normed Signal to hold 1.14095e-09
+Thu Nov 19 13:05:27 2020 low signal detected: 95.37%
+Thu Nov 19 13:05:27 2020 tweaking once forward to get the right direction...
+Thu Nov 19 13:05:29 2020 yes, tweaking forward is the right direction!
+Thu Nov 19 13:05:29 2020 the normed signal is: 1.13281e-09
+tweaking forward
+Thu Nov 19 13:05:31 2020 the new normed signal is: 1.12820e-09
+tweaking once back...
+tweaking once forward...
+Thu Nov 19 13:05:35 2020 the new normed signal to hold is: 1.12822e-09
+Thu Nov 19 13:08:07 2020 low signal detected: 93.11%
+Thu Nov 19 13:08:07 2020 tweaking once forward to get the right direction...
+Thu Nov 19 13:08:09 2020 nope, now tweaking twice reverse...
+Thu Nov 19 13:08:12 2020 yes, tweaking reverse is the right direction!
+Thu Nov 19 13:08:12 2020 the normed signal is: 1.10158e-09
+tweaking forward
+Thu Nov 19 13:08:14 2020 the new normed signal is: 1.09059e-09
+tweaking once back...
+tweaking once forward...
+Thu Nov 19 13:08:18 2020 the new normed signal to hold is: 1.09433e-09
+Thu Nov 19 15:37:37 2020 DCM - controller terminated
+Thu Nov 19 15:38:13 2020 DCM - controller activated
+normed Signal to hold 1.14092e-09
+Thu Nov 19 16:09:52 2020 DCM - controller terminated
+Thu Nov 19 16:09:54 2020 DCM - controller exited
