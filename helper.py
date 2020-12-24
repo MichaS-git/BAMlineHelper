@@ -8,13 +8,10 @@ import helper_calc as calc
 
 from PySide2 import QtWidgets, QtUiTools, QtCore
 import numpy as np
-# import threading  # Timer für den DCM-Controller
-# import time
 import xrt.backends.raycing.materials as rm
 import xrt.backends.raycing.sources as rs
 
 import pyqtgraph as pg
-# import csv                              # csv-Package zum speichern/öffnen von csv-Files
 from epics import caget, caput, camonitor
 
 pg.setConfigOption('background', 'w')  # Plothintergrund weiß (2D)
@@ -54,17 +51,12 @@ class Helper(QtCore.QObject):
 
         # Aussehen des Plots
         # self.Graph.addLegend(offset=(1100, -600))  # Plots mit Legenden (Offsetposition in Pixeln)
-        self.Map = Map()  # Verknüpfung zu Map
-        self.Xafscsv = Xafscsv()  # Verknüpfung zum Xafs-List-Generator
 
         # beim Start die erste Funktion ausführen
         self.global_energy_range()  # set global Energy-Range
-        self.xrt_source_wls()  # berechne ein Source-Spektrum
         self.choose_function()  # erster Plot
 
         self.window.function_box.currentIndexChanged.connect(self.choose_function)  # welche Funktion rechnen?
-        self.window.actionBLMap.triggered.connect(self.show_map)  # öffnet das BL-Map Fenster
-        self.window.actionXAFS_CSV_List.triggered.connect(self.show_xafs_csv)
         self.window.calc_fwhm.stateChanged.connect(self.choose_function)
         self.window.fwhm.valueChanged.connect(self.choose_function)
 
@@ -105,6 +97,9 @@ class Helper(QtCore.QObject):
         self.window.dcm_theta.valueChanged.connect(self.choose_function)
         self.window.dcm_harmonics.valueChanged.connect(self.choose_function)
 
+        # class variables
+        self.flux_xrt_wls = []  # empty flux array at startup
+
     def view_box(self):
 
         """pyqtgraph viewbox for testing"""
@@ -121,16 +116,6 @@ class Helper(QtCore.QObject):
 
     def show(self):
         self.window.show()
-
-    def show_map(self):
-
-        # öffnet das Mapfenster (siehe weiter in der Map-Klasse: class Map(Ui_MapWindow, QMapWindow): ...)
-        self.Map.show()
-
-    def show_xafs_csv(self):
-
-        # öffnet den XAFS-CSV-Listengenerator
-        self.Xafscsv.show()
 
     def dmm_slider_umrechnung(self):
         self.window.dmm_theta.setValue(self.window.dmm_slider.value() / 1e4)
@@ -226,6 +211,11 @@ class Helper(QtCore.QObject):
             self.dmm_beam_offsets()
 
         if self.window.function_box.currentText() == 'XRT-BAMline':
+
+            # if there is no spectrum, calculate it (at startup)
+            if len(self.flux_xrt_wls) == 0:
+                self.xrt_source_wls()
+
             self.bl_spektrum()
 
         if self.window.function_box.currentText() == 'XRT-Filter compare':
@@ -267,7 +257,8 @@ class Helper(QtCore.QObject):
 
         else:
             self.window.text_calculations.setText('Maximum = %.2E at %.3f keV' % (spektrum.max(),
-                                                                           energy_range[spektrum.argmax()] / 1000))
+                                                                                  energy_range[spektrum.argmax()] /
+                                                                                  1000))
 
     # ab hier Funktionen des Dropdown-Menüs
 
@@ -345,6 +336,7 @@ class Helper(QtCore.QObject):
         source_wls = rs.BendingMagnet(**kwargs_wls)
         i0_xrt_wls = source_wls.intensities_on_mesh(energy, theta, psi)[0]
         self.flux_xrt_wls = i0_xrt_wls.sum(axis=(1, 2)) * dtheta * dpsi
+        print(len(self.flux_xrt_wls))
 
         # plottet noch einen 1.3T bending magnet und beendet die Rechnung
         if self.window.compare_magnet.isChecked() is True:  
@@ -574,165 +566,6 @@ class Helper(QtCore.QObject):
         self.window.Graph.plot(e_henke / 1e3, mu_henke, pen='r', name='Henke')
         self.window.Graph.plot(e_chantler / 1e3, mu_chantler, pen='g', name='Chantler')
         self.window.Graph.plot(e_brco / 1e3, mu_brco, pen='b', name='BrCo')
-
-# Das Mapfenster
-
-
-class Map(QtCore.QObject):
-
-    def __init__(self):
-        super(Map, self).__init__()
-        self.window = load_ui(os.path.join(DIR_PATH, 'BLMap.ui'))
-
-        # Achsenbeschriftung
-        self.window.map.setLabel('bottom', text='distance from source / mm')  # X-Achsenname
-        self.window.map.setLabel('left', text='vertical beamoffset / mm')  # Y-Achsenname
-
-        # die optische Achse
-        self.window.map.plot((17000, 34500), (0, 0), pen=pg.mkPen('k', style=QtCore.Qt.DashLine))
-
-        # BL-Komponenten
-        # Blenden 1 (Position auf +- ~100mm geschätzt)
-        self.window.map.plot((17800, 17800), (1, 11), pen=pg.mkPen('b'))  # obere Backe
-        self.window.map.plot((17800, 17800), (-1, -11), pen=pg.mkPen('b'))  # untere Backe
-
-        # Filter 1 (Position auf +- ~100mm geschätzt)
-        self.window.map.plot((18060, 18060), (-5, 5), pen=pg.mkPen('r'))
-
-        # Filter 2 (Position auf +- ~100mm geschätzt)
-        self.window.map.plot((18160, 18160), (-5, 5), pen=pg.mkPen('r'))
-
-        # Drahtmonitor M1
-        self.window.map.plot((18487, 18487), (-15.5, -14.5), pen=pg.mkPen('r'))
-
-        # DMM mirror 1
-        self.window.map.plot((19239, 19559), (0, 0), pen=pg.mkPen('r'))
-
-        # DMM mirror 2
-        self.window.map.plot((19809, 20189), (10, 10), pen=pg.mkPen('r'))
-
-        # Drahtmonitor M2
-        self.window.map.plot((25542, 25542), (-15.5, -14.5), pen=pg.mkPen('r'))
-
-        # DCM crystal 1
-        self.window.map.plot((26750, 26850), (0, 0), pen=pg.mkPen('r'))
-
-        # DCM crystal 2
-        self.window.map.plot((26950, 27050), (10, 10), pen=pg.mkPen('r'))
-
-        # Beamstop
-        self.window.map.plot((27738, 27738), (-10, 0), pen=pg.mkPen('r', width=4.5))
-
-        # Fluoreszenzschirm M4
-        self.window.map.plot((28091, 28091), (-10, 0), pen=pg.mkPen('r'))
-
-        # Blenden 2 (Position auf +- ~100mm geschätzt)
-        self.window.map.plot((29950, 29950), (2, 12), pen=pg.mkPen('b'))  # obere Backe
-        self.window.map.plot((29950, 29950), (-2, -12), pen=pg.mkPen('b'))  # untere Backe
-
-        # Drahtmonitor M5 (vertical)
-        self.window.map.plot((30330, 30330), (-15.5, -14.5), pen=pg.mkPen('r'))
-
-        # Window
-        self.window.map.plot((34000, 34000), (-12.5, 12.5), pen=pg.mkPen('r'))
-
-        # Blenden 3 (Position auf +- ~100mm geschätzt)
-        self.window.map.plot((34050, 34050), (3, 13), pen=pg.mkPen('b'))  # obere Backe
-        self.window.map.plot((34050, 34050), (-3, -13), pen=pg.mkPen('b'))  # untere Backe
-
-    def show(self):
-        self.window.show()
-
-
-# XAFS-CSV-Listengenerator für Ana
-
-
-class Xafscsv(QtCore.QObject):
-
-    def __init__(self):
-        super(Xafscsv, self).__init__()
-        self.window = load_ui(os.path.join(DIR_PATH, 'xafs_csv.ui'))
-
-        self.window.generateList.clicked.connect(self.xafs_csv)
-        self.window.getValues.clicked.connect(self.get_positions)
-
-    def get_positions(self):
-
-        y2 = caget("OMS58:25002003")
-        theta = caget("OMS58:25002000")
-
-        self.window.dcm_y2.setValue(y2)
-        self.window.dcm_theta.setValue(theta)
-
-        offset = y2 * 2 * math.cos(math.radians(theta))
-        self.window.offset.setValue(offset)
-
-    def xafs_csv(self):
-
-        offset = self.window.dcm_y2.value() * 2 * math.cos(math.radians(self.window.dcm_theta.value()))
-        self.window.offset.setValue(offset)
-        e0 = self.window.e0.value()  # EDGE ENERGY IN eV
-
-        prestart = self.window.preStart.value()  # PREEDGE START BEFORE EDGE IN eV
-        prestop = self.window.preStop.value()  # PRE EDGE STOP BEFORE EDGE IN eV
-        prestep = self.window.preStep.value()  # PREEDGE STEP
-
-        xa1start = self.window.xa1Start.value()  # XANES 1 START BEFORE EDGE IN eV
-        xa1stop = self.window.xa1Stop.value()  # XANES 1 STOP BEHIND EDGE IN eV
-        xa1step = self.window.xa1Step.value()  # XANES 1 STEP
-
-        xa2start = self.window.xa2Start.value()  # XANES 2 START BEHIND EDGE IN eV
-        xa2stop = self.window.xa2Stop.value()  # XANES 2 STOP BEHIND EDGE IN eV
-        xa2step = self.window.xa2Step.value()  # XANES 2 STEP
-
-        # EXAFS START IN k - SPACE(XANES STOP = 50 --> k = 3.67
-        #                                  =100 --> k = 5.13
-        #                                 =200 --> k = 7.26
-        exstart = self.window.exStart.value()
-        exstop = self.window.exStop.value()  # EXAFS STOP IN k - SPACE
-        # EXAFS STEP IN
-        # k - SPACE (EXAFS: deltak = 0.04... 0.06, XANES deltak = 2.5)
-        exstep = self.window.exStep.value()
-
-        # Pre - edge
-        energytable = np.arange(e0 - prestart, e0 - prestop, prestep)
-
-        # XANES_1
-        xanes1_table = np.arange(e0 - xa1start, e0 + xa1stop, xa1step)
-        energytable = np.append(energytable, xanes1_table)
-
-        # XANES_2
-        xanes2_table = np.arange(e0 + xa2start, e0 + xa2stop, xa2step)
-        energytable = np.append(energytable, xanes2_table)
-
-        # EXAFS
-        exafs_k_table = np.arange(exstart, exstop, exstep)
-        for k in exafs_k_table:
-            e = round((k ** 2 / 0.263) + e0, 4)
-            energytable = np.append(energytable, e)
-
-        dcm_y2_table = np.array([])
-
-        for energy in energytable:
-            neudcm_y2 = offset / (2. * math.cos(math.asin(1.239842 / (2 * 0.31356) / energy * 1000.0)))
-            dcm_y2_table = np.append(dcm_y2_table, neudcm_y2)
-
-        energytable = energytable / 1000
-        combined_data = np.vstack((energytable, dcm_y2_table)).T
-
-        # write it to CSV
-        directory = '/messung/rfa/daten/.csv'
-        path = QtWidgets.QFileDialog.getSaveFileName(None, 'Save File', directory, 'CSV(*.csv)')
-
-        path = path[0]
-        header = "DCM_Energy;DCM_Y_2"
-        if path == '':
-            return
-
-        np.savetxt(path, combined_data, fmt='%.4f', delimiter=';', header=header, comments='')
-
-    def show(self):
-        self.window.show()
 
 
 if __name__ == '__main__':
