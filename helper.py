@@ -154,7 +154,7 @@ class Helper(QtCore.QObject):
         self.window.ver_mm.valueChanged.connect(self.calc_acceptance)
         self.window.distance.valueChanged.connect(self.calc_acceptance)
         self.window.calc_source.clicked.connect(self.source_calc_thread)
-        self.window.source_out.stateChanged.connect(self.bl_spectrum)
+        self.window.source_in.stateChanged.connect(self.bl_spectrum)
 
         # user input to filter parameters
         self.window.filter1.currentIndexChanged.connect(self.set_filter_size)
@@ -166,6 +166,7 @@ class Helper(QtCore.QObject):
         self.window.dmm_stripe.currentIndexChanged.connect(self.choose_dmm_stripe)
         self.window.dmm_2d.valueChanged.connect(self.new_dmm_parameters)
         self.window.dmm_gamma.valueChanged.connect(self.new_dmm_parameters)
+        self.window.dmm_corr.valueChanged.connect(self.bl_spectrum)
         self.window.layer_pairs.valueChanged.connect(self.bl_spectrum)
         self.window.dmm_slider_theta.valueChanged.connect(self.dmm_slider_theta_conversion)
         self.window.dmm_slider_off.valueChanged.connect(self.dmm_slider_off_conversion)
@@ -173,11 +174,13 @@ class Helper(QtCore.QObject):
         self.window.dmm_theta.valueChanged.connect(self.bl_spectrum)
         self.window.d_top_layer.valueChanged.connect(self.bl_spectrum)
         self.window.dmm_one_ml.stateChanged.connect(self.bl_spectrum)
-        self.window.dmm_out.stateChanged.connect(self.bl_spectrum)
+        self.window.dmm_in.stateChanged.connect(self.bl_spectrum)
+        self.window.dmm_off_check.stateChanged.connect(self.bl_spectrum)
 
         # user input to dcm parameters
-        self.window.dcm_out.stateChanged.connect(self.bl_spectrum)
+        self.window.dcm_in.stateChanged.connect(self.bl_spectrum)
         self.window.dcm_one_crystal.stateChanged.connect(self.bl_spectrum)
+        self.window.dcm_off_check.stateChanged.connect(self.bl_spectrum)
         self.window.dcm_orientation.currentIndexChanged.connect(self.bl_spectrum)
         self.window.dcm_slider_theta.valueChanged.connect(self.dcm_slider_theta_conversion)
         self.window.dcm_theta.valueChanged.connect(self.bl_spectrum)
@@ -352,7 +355,7 @@ class Helper(QtCore.QObject):
                                   self.window.e_step.value())
 
         # if we don't need a source spectrum the calculation can be done "instantly"
-        if self.window.source_out.isChecked() is True:
+        if self.window.source_in.isChecked() is False:
             self.bl_spectrum()
 
     def spectrum_evaluation(self, energy_range, spectrum):
@@ -445,8 +448,8 @@ class Helper(QtCore.QObject):
         filter2_text = self.window.filter2.currentText()
 
         # if nothing is selected --> return
-        if 'none' in filter1_text and 'none' in filter2_text and self.window.source_out.isChecked() is True and \
-                self.window.dmm_out.isChecked() is True and self.window.dcm_out.isChecked() is True:
+        if 'none' in filter1_text and 'none' in filter2_text and self.window.source_in.isChecked() is False and \
+                self.window.dmm_in.isChecked() is False and self.window.dcm_in.isChecked() is False:
             self.window.Graph.clear()
             text = pg.TextItem(text='Nothing to plot... choose your settings!', color=(200, 0, 0), anchor=(0.5, 0.5))
             self.window.Graph.addItem(text)
@@ -454,7 +457,7 @@ class Helper(QtCore.QObject):
             return
 
         # without a source-spectrum the energy_array comes "def energy_range", otherwise from "def xrt_source_wls"
-        if self.window.source_out.isChecked() is True:
+        if self.window.source_in.isChecked() is False:
             energy_array = self.energy
         else:
             energy_array = self.source_spectrum_energy
@@ -516,7 +519,7 @@ class Helper(QtCore.QObject):
 
         # the DMM
         spectrum_dmm = 1
-        if self.window.dmm_out.isChecked() is False:
+        if self.window.dmm_in.isChecked():
             ml_system = self.window.dmm_stripe.currentText()
             # The original W/Si-multilayer of the BAMline: d(Mo) / d(Mo + B4C) = 0.4
             # d_Mo = (5.736 / 2) * 0.4 = 2.868 * 0.4 = 1.1472 nm
@@ -557,7 +560,7 @@ class Helper(QtCore.QObject):
 
         # the DCM
         spectrum_dcm = 1
-        if self.window.dcm_out.isChecked() is False:
+        if self.window.dcm_in.isChecked():
             if self.window.dcm_orientation.currentText() == '111':
                 hkl_orientation = (1, 1, 1)
             else:
@@ -577,9 +580,9 @@ class Helper(QtCore.QObject):
                     spectrum_dcm = spectrum_dcm + abs(dcm_spol) ** 4
 
         # what constellation do we have?
-        if self.window.source_out.isChecked() is True:
+        if self.window.source_in.isChecked() is False:
             # without a source
-            if self.window.dmm_out.isChecked() is True and self.window.dcm_out.isChecked() is True:
+            if self.window.dmm_in.isChecked() is False and self.window.dcm_in.isChecked() is False:
                 self.window.Graph.setLabel('left', text='Transmittance / a.u.')
             else:
                 self.window.Graph.setLabel('left', text='Reflectivity / a.u.')
@@ -608,7 +611,10 @@ class Helper(QtCore.QObject):
 
         # Calculate the minimum- and maximum-energy plots depending on the dmm-beam-offset.
         hc_e = 1.2398424  # keV/nm
-        if self.window.dmm_out.isChecked() is False and self.window.dmm_stripe.currentText() != 'Pd':
+        if self.window.dmm_in.isChecked() and self.window.dmm_stripe.currentText() != 'Pd' and \
+                self.window.dmm_off_check.isChecked():
+
+            # this should actually come from EPICS ...
             z2_llm = 400  # Soft-Low-Limit Z2 (needed for emin)
             z2_hlm = 1082.5  # Soft-High-Limit Z2 (needed for emax)
 
@@ -631,8 +637,8 @@ class Helper(QtCore.QObject):
             dmm_emin_line.setPos([e_min, e_min])
             dmm_emax_line.setPos([e_max, e_max])
 
-        # Calculate the minimum- and maximum-energy plots depending on the dmm-beam-offset.
-        if self.window.dcm_out.isChecked() is False:
+        # Calculate the minimum- and maximum-energy plots depending on the dcm-beam-offset.
+        if self.window.dcm_in.isChecked() and self.window.dcm_off_check.isChecked():
             dcm_off = self.window.dcm_off.value()
 
             # this should actually come from EPICS ...

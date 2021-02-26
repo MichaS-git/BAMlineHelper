@@ -27,22 +27,6 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_7">
-    <item row="1" column="2">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Fixed</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>250</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
     <item row="0" column="0" rowspan="6">
      <widget class="PlotWidget" name="Graph">
       <property name="sizePolicy">
@@ -53,20 +37,16 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="1" colspan="2">
+    <item row="0" column="1">
      <widget class="QGroupBox" name="groupBox">
-      <layout class="QGridLayout" name="gridLayout_5">
-       <item row="1" column="2">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>hkl-indices up to:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="5">
-        <widget class="QCheckBox" name="dcm_out">
-         <property name="enabled">
-          <bool>true</bool>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="source_in">
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>16777215</height>
+          </size>
          </property>
          <property name="font">
           <font>
@@ -75,91 +55,26 @@
           </font>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;If checked&lt;/span&gt;, the &lt;span style=&quot; font-weight:600;&quot;&gt;DCM is not&lt;/span&gt; part of the spectrum calculation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Take out the source spectrum and calculate only the transmitivity/reflectivity of the chosen optical elements. Almost no computational load required. Changes in the energy range incorporated immediately. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="layoutDirection">
           <enum>Qt::RightToLeft</enum>
          </property>
          <property name="text">
-          <string>out</string>
+          <string/>
          </property>
          <property name="checked">
           <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="0" column="4">
-        <widget class="QCheckBox" name="dcm_one_crystal">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, reflectivity of only one crystal is considered: &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dcm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dcm_spol) ** &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;instead of&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dcm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dcm_spol) ** 4&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>1 crystal only</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QComboBox" name="dcm_orientation">
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_parameter_2">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="layoutDirection">
-          <enum>Qt::RightToLeft</enum>
-         </property>
-         <item>
-          <property name="text">
-           <string>111</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>311</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Theta / °</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
-        <widget class="QSpinBox" name="dcm_harmonics">
-         <property name="toolTip">
-          <string>How many harmonics to calculate?</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="value">
-          <number>1</number>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_parameter_4">
-         <property name="enabled">
-          <bool>true</bool>
          </property>
          <property name="font">
           <font>
@@ -169,59 +84,203 @@
           </font>
          </property>
          <property name="text">
-          <string>DCM</string>
+          <string>Source</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1" colspan="4">
-        <widget class="QSlider" name="dcm_slider_theta">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="minimum">
-          <number>10000</number>
-         </property>
-         <property name="maximum">
-          <number>400000</number>
-         </property>
-         <property name="value">
-          <number>50000</number>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="5">
-        <widget class="QDoubleSpinBox" name="dcm_theta">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
+       <item row="0" column="2" colspan="4">
+        <widget class="QPushButton" name="calc_source">
          <property name="toolTip">
-          <string>Angle of the first DCM-crystal.</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Runs a flux density calculation for a bending magnet with settings given in the source-bloc. Depending on the energy range size this can take up to a minute to finish (~10.000 steps ). &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>calculate new source spectrum</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4" colspan="2">
+        <widget class="QDoubleSpinBox" name="electron_e">
+         <property name="toolTip">
+          <string>Electron beam energy in GeV. BESSY II: 1.7 GeV</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
          <property name="decimals">
-          <number>4</number>
+          <number>3</number>
          </property>
          <property name="minimum">
-          <double>1.000000000000000</double>
+          <double>0.100000000000000</double>
          </property>
          <property name="maximum">
-          <double>40.000000000000000</double>
+          <double>5.000000000000000</double>
          </property>
          <property name="singleStep">
-          <double>0.000100000000000</double>
+          <double>0.100000000000000</double>
          </property>
          <property name="value">
-          <double>5.000000000000000</double>
+          <double>1.700000000000000</double>
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_param1_28">
+       <item row="1" column="9">
+        <widget class="QDoubleSpinBox" name="beam_current">
+         <property name="toolTip">
+          <string>Electron beam current in mA. BESSY II normal user operation mode: ~300 mA</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>0.001000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>600.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>50.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="4" colspan="2">
+        <widget class="QDoubleSpinBox" name="distance">
+         <property name="toolTip">
+          <string>Distance from the source spot inside the WLS to the experiment. Distance from source to kapton window: 34 m</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>0.001000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>34.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="9">
+        <widget class="QDoubleSpinBox" name="magnetic_field">
+         <property name="toolTip">
+          <string>Magnetic field of the bending magnet in T. BAMline-WLS: 7 T</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>10.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="value">
+          <double>7.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="4">
+        <widget class="QLabel" name="label_param1_26">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>flux area at exp., hor. x ver. / mm</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="6" colspan="2">
+        <widget class="QDoubleSpinBox" name="hor_acceptance">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The horizontal acceptance = arctan(hor. flux / 2 * distance). Calculates automatically when the users changes the flux area or the distance source &amp;lt;-&amp;gt; experiment.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="wrapping">
+          <bool>false</bool>
+         </property>
+         <property name="frame">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="buttonSymbols">
+          <enum>QAbstractSpinBox::NoButtons</enum>
+         </property>
+         <property name="decimals">
+          <number>6</number>
+         </property>
+         <property name="value">
+          <double>0.014706000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="8" colspan="2">
+        <widget class="QDoubleSpinBox" name="ver_acceptance">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The vertical acceptance = arctan(ver. flux / 2 * distance). Calculates automatically when the users changes the flux area or the distance source &amp;lt;-&amp;gt; experiment.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="frame">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="buttonSymbols">
+          <enum>QAbstractSpinBox::NoButtons</enum>
+         </property>
+         <property name="decimals">
+          <number>6</number>
+         </property>
+         <property name="value">
+          <double>0.014706000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="3">
+        <widget class="QLabel" name="label_param1_4">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -241,31 +300,37 @@
           </font>
          </property>
          <property name="text">
-          <string>Si orientation</string>
+          <string>energy range / keV from:</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="3" column="1" colspan="4">
-        <widget class="QSlider" name="dcm_slider_off">
+       <item row="6" column="3" colspan="2">
+        <widget class="QDoubleSpinBox" name="e_min">
+         <property name="toolTip">
+          <string>The lowest energy you want to calculate.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
          <property name="minimum">
-          <number>1120</number>
+          <double>0.100000000000000</double>
          </property>
          <property name="maximum">
-          <number>4000</number>
+          <double>250.000000000000000</double>
          </property>
          <property name="value">
-          <number>2000</number>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <double>0.100000000000000</double>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_6">
+       <item row="6" column="5">
+        <widget class="QLabel" name="label_3">
          <property name="font">
           <font>
            <weight>75</weight>
@@ -273,23 +338,383 @@
           </font>
          </property>
          <property name="text">
-          <string>Offset / mm</string>
+          <string>to:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="3" column="5">
-        <widget class="QDoubleSpinBox" name="dcm_off">
+       <item row="6" column="6">
+        <widget class="QDoubleSpinBox" name="e_max">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Vertical beam offset after passing the DCM. Watch the reachable min-max-Energies!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>The highest energy you want to calculate.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>3</number>
          </property>
          <property name="minimum">
-          <double>11.199999999999999</double>
+          <double>0.100000000000000</double>
          </property>
          <property name="maximum">
-          <double>40.000000000000000</double>
+          <double>250.000000000000000</double>
          </property>
          <property name="value">
-          <double>20.000000000000000</double>
+          <double>70.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="7" colspan="2">
+        <widget class="QLabel" name="label_param1_5">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>steps:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="9">
+        <widget class="QSpinBox" name="e_step">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of the steps to calculate between lowest and highest energy. Note that a high number of steps requires long time to calculate: almost a minute for ~10.000 steps.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="minimum">
+          <number>100</number>
+         </property>
+         <property name="maximum">
+          <number>1000000</number>
+         </property>
+         <property name="singleStep">
+          <number>1000</number>
+         </property>
+         <property name="value">
+          <number>1000</number>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0" colspan="10">
+        <widget class="QProgressBar" name="progressBar">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>13</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="textVisible">
+          <bool>false</bool>
+         </property>
+         <property name="format">
+          <string>%p%</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="4" colspan="2">
+        <widget class="QDoubleSpinBox" name="hor_mm">
+         <property name="toolTip">
+          <string>Horizontal part of the flux area at the experiment.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>2</number>
+         </property>
+         <property name="minimum">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>185.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="value">
+          <double>1.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="6" colspan="2">
+        <widget class="QDoubleSpinBox" name="ver_mm">
+         <property name="toolTip">
+          <string>Vertical part of the flux area at the experiment.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>2</number>
+         </property>
+         <property name="minimum">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>37.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="value">
+          <double>1.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="6">
+        <widget class="QLabel" name="label_param1_2">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>--&gt; results in hor. x ver. acceptance / mrad</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="4">
+        <widget class="QLabel" name="label_param1_27">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>distance source &lt;-&gt; exp. / m</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="4">
+        <widget class="QLabel" name="label_param1_6">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>ring energy / GeV</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="6" colspan="3">
+        <widget class="QLabel" name="label_param1_7">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>ring current / mA</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="6" colspan="3">
+        <widget class="QLabel" name="label_param1_8">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>magnetic field / T</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0" colspan="10">
+        <widget class="QLabel" name="source_calc_info">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>365</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>The last calculated source spectrum. This array is processed almost instantly with the optic-settings below. </string>
+         </property>
+         <property name="text">
+          <string>calculated source spectrum / keV:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="9">
+        <widget class="QRadioButton" name="dist_e_eV">
+         <property name="toolTip">
+          <string>The resulted flux density is per 1 eV.</string>
+         </property>
+         <property name="text">
+          <string>1 eV</string>
+         </property>
+         <property name="autoExclusive">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="6" colspan="3">
+        <widget class="QRadioButton" name="dist_e_bandwidth">
+         <property name="toolTip">
+          <string>The resulted flux density is per 0.1% bandwidth.</string>
+         </property>
+         <property name="text">
+          <string>0.1% bandwidth</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="autoExclusive">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="6">
+        <widget class="QLabel" name="label_param1_9">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>calculate flux density per:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -298,6 +723,12 @@
     </item>
     <item row="1" column="1">
      <widget class="QGroupBox" name="groupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="2">
         <widget class="QLabel" name="label_param1">
@@ -517,10 +948,158 @@
       </layout>
      </widget>
     </item>
-    <item row="2" column="1" colspan="2">
+    <item row="2" column="1">
      <widget class="QGroupBox" name="groupBox">
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="1" column="1" colspan="3">
+       <item row="1" column="0" colspan="3">
+        <widget class="QLabel" name="label_param1_25">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>number of layer-pairs</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QCheckBox" name="dmm_off_check">
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Plot the Enery-Constraints depending on the offset.</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="dmm_in">
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;If checked&lt;/span&gt;, the &lt;span style=&quot; font-weight:600;&quot;&gt;DMM is not&lt;/span&gt; part of the spectrum calculation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_parameter_3">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>DMM</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5">
+        <widget class="QCheckBox" name="dmm_one_ml">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, reflectivity of only one mirror is considered: &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dmm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dmm_spol) ** &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;instead of&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dmm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dmm_spol) ** 4&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>1 mirror only</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="3">
+        <widget class="QLabel" name="label_param1_20">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="text">
+          <string>Γ</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
         <widget class="QComboBox" name="dmm_stripe">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -554,7 +1133,101 @@
          </item>
         </widget>
        </item>
-       <item row="1" column="6">
+       <item row="1" column="5">
+        <widget class="QDoubleSpinBox" name="dmm_corr">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Determined correction factor for the choosen multilayer-stripe at BAMline.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>2.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.001000000000000</double>
+         </property>
+         <property name="value">
+          <double>1.036000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QLabel" name="label_param3_4">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>corr. factor beamOffset</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
+        <widget class="QDoubleSpinBox" name="dmm_gamma">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Relation between the layers:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; font-style:italic; color:#8c8c8c;&quot;&gt;gamma = d(topLayer) / d(topLayer + bottomLayer)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>2</number>
+         </property>
+         <property name="maximum">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.010000000000000</double>
+         </property>
+         <property name="value">
+          <double>0.400000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QDoubleSpinBox" name="dmm_2d">
+         <property name="toolTip">
+          <string>Thickness of two layer-pairs.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="value">
+          <double>6.619000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
         <widget class="QSpinBox" name="layer_pairs">
          <property name="toolTip">
           <string>The number of the multilayer layer-pairs.</string>
@@ -573,49 +1246,116 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_parameter_3">
+       <item row="3" column="0" colspan="3">
+        <widget class="QLabel" name="label_param1_23">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
          <property name="font">
           <font>
-           <pointsize>12</pointsize>
            <weight>50</weight>
            <bold>false</bold>
           </font>
          </property>
          <property name="text">
-          <string>DMM</string>
+          <string>2D / nm</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="0" column="7">
-        <widget class="QCheckBox" name="dmm_out">
+       <item row="3" column="4">
+        <widget class="QLabel" name="label_param1_21">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
          <property name="font">
           <font>
-           <weight>75</weight>
-           <bold>true</bold>
+           <weight>50</weight>
+           <bold>false</bold>
           </font>
          </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;If checked&lt;/span&gt;, the &lt;span style=&quot; font-weight:600;&quot;&gt;DMM is not&lt;/span&gt; part of the spectrum calculation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="layoutDirection">
-          <enum>Qt::RightToLeft</enum>
-         </property>
          <property name="text">
-          <string>out</string>
+          <string>topLayer / Å</string>
          </property>
-         <property name="checked">
-          <bool>true</bool>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="2" column="6">
+       <item row="4" column="4">
+        <widget class="QLabel" name="label_param1_22">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>bottomLayer / Å</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="5">
+        <widget class="QDoubleSpinBox" name="d_bottom_layer">
+         <property name="toolTip">
+          <string>Thickness bottomLayer in angstrom.</string>
+         </property>
+         <property name="frame">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="buttonSymbols">
+          <enum>QAbstractSpinBox::NoButtons</enum>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="value">
+          <double>13.238000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="5">
         <widget class="QDoubleSpinBox" name="d_top_layer">
          <property name="toolTip">
           <string>Thickness topLayer in angstrom.</string>
@@ -646,298 +1386,7 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="4" colspan="2">
-        <widget class="QLabel" name="label_param1_25">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>number of layer-pairs</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_param1_10">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>stripe</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="5">
-        <widget class="QLabel" name="label_param1_22">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>bottomLayer / Å</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="4">
-        <widget class="QLabel" name="label_param3_4">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>corr. factor beamOffset</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0" colspan="2">
-        <widget class="QLabel" name="label">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Theta / °</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="2" colspan="5">
-        <widget class="QSlider" name="dmm_slider_theta">
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>30000</number>
-         </property>
-         <property name="value">
-          <number>5000</number>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="6">
-        <widget class="QDoubleSpinBox" name="d_bottom_layer">
-         <property name="toolTip">
-          <string>Thickness bottomLayer in angstrom.</string>
-         </property>
-         <property name="frame">
-          <bool>false</bool>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-         <property name="buttonSymbols">
-          <enum>QAbstractSpinBox::NoButtons</enum>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="value">
-          <double>13.238000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="5">
-        <widget class="QLabel" name="label_param1_21">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>topLayer / Å</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_param1_23">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>2D / nm</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="3">
-        <widget class="QLabel" name="label_param1_20">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Γ</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1" colspan="2">
-        <widget class="QDoubleSpinBox" name="dmm_2d">
-         <property name="toolTip">
-          <string>Thickness of two layer-pairs.</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="singleStep">
-          <double>0.100000000000000</double>
-         </property>
-         <property name="value">
-          <double>6.619000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="4">
-        <widget class="QDoubleSpinBox" name="dmm_gamma">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Relation between the layers:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; font-style:italic; color:#8c8c8c;&quot;&gt;gamma = d(topLayer) / d(topLayer + bottomLayer)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>2</number>
-         </property>
-         <property name="maximum">
-          <double>1.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.010000000000000</double>
-         </property>
-         <property name="value">
-          <double>0.400000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="7">
+       <item row="5" column="5">
         <widget class="QDoubleSpinBox" name="dmm_theta">
          <property name="toolTip">
           <string>Angle of the first DMM-mirror.</string>
@@ -962,42 +1411,39 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="6">
-        <widget class="QCheckBox" name="dmm_one_ml">
+       <item row="6" column="5">
+        <widget class="QDoubleSpinBox" name="dmm_off">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, reflectivity of only one mirror is considered: &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dmm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dmm_spol) ** &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;instead of&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dmm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dmm_spol) ** 4&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>1 mirror only</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="4">
-        <widget class="QDoubleSpinBox" name="dmm_corr">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Determined correction factor for the choosen multilayer-stripe at BAMline.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>Vertical beam offset after passing the DMM. Watch the reachable min-max-Energies!</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
          <property name="minimum">
-          <double>1.000000000000000</double>
+          <double>4.000000000000000</double>
          </property>
          <property name="maximum">
-          <double>2.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.001000000000000</double>
+          <double>50.000000000000000</double>
          </property>
          <property name="value">
-          <double>1.036000000000000</double>
+          <double>8.000000000000000</double>
          </property>
         </widget>
        </item>
-       <item row="5" column="2" colspan="5">
+       <item row="6" column="1">
+        <widget class="QLabel" name="label_5">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Offset / mm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="2" colspan="3">
         <widget class="QSlider" name="dmm_slider_off">
          <property name="minimum">
           <number>400</number>
@@ -1013,24 +1459,24 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="7">
-        <widget class="QDoubleSpinBox" name="dmm_off">
-         <property name="toolTip">
-          <string>Vertical beam offset after passing the DMM. Watch the reachable min-max-Energies!</string>
-         </property>
+       <item row="5" column="2" colspan="3">
+        <widget class="QSlider" name="dmm_slider_theta">
          <property name="minimum">
-          <double>4.000000000000000</double>
+          <number>1</number>
          </property>
          <property name="maximum">
-          <double>50.000000000000000</double>
+          <number>30000</number>
          </property>
          <property name="value">
-          <double>8.000000000000000</double>
+          <number>5000</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
        <item row="5" column="0" colspan="2">
-        <widget class="QLabel" name="label_5">
+        <widget class="QLabel" name="label">
          <property name="font">
           <font>
            <weight>75</weight>
@@ -1038,26 +1484,16 @@
           </font>
          </property>
          <property name="text">
-          <string>Offset / mm</string>
+          <string>Theta / °</string>
          </property>
         </widget>
        </item>
       </layout>
      </widget>
     </item>
-    <item row="4" column="1" colspan="2">
+    <item row="4" column="1">
      <widget class="QGroupBox" name="groupBox">
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="1">
-        <widget class="QPushButton" name="action_button">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Go there!</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="0" colspan="2">
         <widget class="QTextBrowser" name="text_calculations">
          <property name="sizePolicy">
@@ -1065,6 +1501,16 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QPushButton" name="action_button">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Go there!</string>
          </property>
         </widget>
        </item>
@@ -1081,21 +1527,8 @@
       </layout>
      </widget>
     </item>
-    <item row="5" column="1" colspan="2">
+    <item row="5" column="1">
      <layout class="QGridLayout" name="gridLayout_6">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>plot options:</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="3">
        <widget class="QCheckBox" name="calc_fwhm">
         <property name="sizePolicy">
@@ -1109,6 +1542,38 @@
         </property>
         <property name="text">
          <string>show FWHM</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QRadioButton" name="dots_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Show the single plot-dots. </string>
+        </property>
+        <property name="text">
+         <string>dots</string>
+        </property>
+        <property name="autoExclusive">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="cursor_pos">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>cursor position:</string>
         </property>
        </widget>
       </item>
@@ -1137,38 +1602,6 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="cursor_pos">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>cursor position:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QRadioButton" name="dots_button">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="toolTip">
-         <string>Show the single plot-dots. </string>
-        </property>
-        <property name="text">
-         <string>dots</string>
-        </property>
-        <property name="autoExclusive">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
        <widget class="QRadioButton" name="line_button">
         <property name="sizePolicy">
@@ -1191,275 +1624,137 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>plot options:</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
-    <item row="0" column="1" colspan="2">
+    <item row="3" column="1">
      <widget class="QGroupBox" name="groupBox">
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="3" column="7">
-        <widget class="QDoubleSpinBox" name="ver_mm">
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="2" column="6">
+        <widget class="QDoubleSpinBox" name="dcm_theta">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="toolTip">
-          <string>Vertical part of the flux area at the experiment.</string>
+          <string>Angle of the first DCM-crystal.</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
          <property name="decimals">
-          <number>2</number>
+          <number>4</number>
          </property>
          <property name="minimum">
-          <double>0.100000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>37.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.100000000000000</double>
-         </property>
-         <property name="value">
           <double>1.000000000000000</double>
          </property>
-        </widget>
-       </item>
-       <item row="2" column="3" colspan="2">
-        <widget class="QDoubleSpinBox" name="distance">
-         <property name="toolTip">
-          <string>Distance from the source spot inside the WLS to the experiment. Distance from source to kapton window: 34 m</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="minimum">
-          <double>0.001000000000000</double>
-         </property>
          <property name="maximum">
-          <double>100.000000000000000</double>
+          <double>40.000000000000000</double>
          </property>
          <property name="singleStep">
-          <double>1.000000000000000</double>
+          <double>0.000100000000000</double>
          </property>
          <property name="value">
-          <double>34.000000000000000</double>
+          <double>5.000000000000000</double>
          </property>
         </widget>
        </item>
-       <item row="5" column="6">
-        <widget class="QRadioButton" name="dist_e_eV">
+       <item row="3" column="0">
+        <widget class="QCheckBox" name="dcm_off_check">
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <property name="toolTip">
-          <string>The resulted flux density is per 1 eV.</string>
+          <string>Plot the Enery-Constraints depending on the offset.</string>
          </property>
          <property name="text">
-          <string>1 eV</string>
-         </property>
-         <property name="autoExclusive">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="3" colspan="3">
-        <widget class="QRadioButton" name="dist_e_bandwidth">
-         <property name="toolTip">
-          <string>The resulted flux density is per 0.1% bandwidth.</string>
-         </property>
-         <property name="text">
-          <string>0.1% bandwidth</string>
+          <string/>
          </property>
          <property name="checked">
           <bool>true</bool>
          </property>
-         <property name="autoExclusive">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3" colspan="2">
-        <widget class="QDoubleSpinBox" name="electron_e">
-         <property name="toolTip">
-          <string>Electron beam energy in GeV. BESSY II: 1.7 GeV</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="minimum">
-          <double>0.100000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>5.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.100000000000000</double>
-         </property>
-         <property name="value">
-          <double>1.700000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="6">
-        <widget class="QDoubleSpinBox" name="hor_acceptance">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The horizontal acceptance = arctan(hor. flux / 2 * distance). Calculates automatically when the users changes the flux area or the distance source &amp;lt;-&amp;gt; experiment.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="wrapping">
-          <bool>false</bool>
-         </property>
-         <property name="frame">
-          <bool>false</bool>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-         <property name="buttonSymbols">
-          <enum>QAbstractSpinBox::NoButtons</enum>
-         </property>
-         <property name="decimals">
-          <number>6</number>
-         </property>
-         <property name="value">
-          <double>0.014706000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="7">
-        <widget class="QDoubleSpinBox" name="ver_acceptance">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The vertical acceptance = arctan(ver. flux / 2 * distance). Calculates automatically when the users changes the flux area or the distance source &amp;lt;-&amp;gt; experiment.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="frame">
-          <bool>false</bool>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-         <property name="buttonSymbols">
-          <enum>QAbstractSpinBox::NoButtons</enum>
-         </property>
-         <property name="decimals">
-          <number>6</number>
-         </property>
-         <property name="value">
-          <double>0.014706000000000</double>
-         </property>
         </widget>
        </item>
        <item row="3" column="6">
-        <widget class="QDoubleSpinBox" name="hor_mm">
+        <widget class="QDoubleSpinBox" name="dcm_off">
          <property name="toolTip">
-          <string>Horizontal part of the flux area at the experiment.</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Vertical beam offset after passing the DCM. Watch the reachable min-max-Energies!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>2</number>
          </property>
          <property name="minimum">
-          <double>0.100000000000000</double>
+          <double>11.199999999999999</double>
          </property>
          <property name="maximum">
-          <double>185.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.100000000000000</double>
+          <double>40.000000000000000</double>
          </property>
          <property name="value">
-          <double>1.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="5">
-        <widget class="QDoubleSpinBox" name="e_max">
-         <property name="toolTip">
-          <string>The highest energy you want to calculate.</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="minimum">
-          <double>0.100000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>250.000000000000000</double>
-         </property>
-         <property name="value">
-          <double>70.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0" colspan="6">
-        <widget class="QLabel" name="label_param1_2">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>--&gt; results in hor. x ver. acceptance / mrad</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="7">
-        <widget class="QDoubleSpinBox" name="magnetic_field">
-         <property name="toolTip">
-          <string>Magnetic field of the bending magnet in T. BAMline-WLS: 7 T</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="minimum">
-          <double>0.100000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>10.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.100000000000000</double>
-         </property>
-         <property name="value">
-          <double>7.000000000000000</double>
+          <double>20.000000000000000</double>
          </property>
         </widget>
        </item>
        <item row="0" column="0">
-        <widget class="QLabel" name="label_parameter_2">
+        <widget class="QCheckBox" name="dcm_in">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;If checked&lt;/span&gt;, the &lt;span style=&quot; font-weight:600;&quot;&gt;DCM is not&lt;/span&gt; part of the spectrum calculation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="layoutDirection">
+          <enum>Qt::RightToLeft</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_parameter_4">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>16777215</height>
+          </size>
          </property>
          <property name="font">
           <font>
@@ -1469,399 +1764,133 @@
           </font>
          </property>
          <property name="text">
-          <string>Source</string>
+          <string>DCM</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="5" colspan="2">
-        <widget class="QLabel" name="label_param1_8">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_6">
          <property name="font">
           <font>
-           <weight>50</weight>
-           <bold>false</bold>
+           <weight>75</weight>
+           <bold>true</bold>
           </font>
          </property>
          <property name="text">
-          <string>magnetic field / T</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <string>Offset / mm</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="7">
-        <widget class="QDoubleSpinBox" name="beam_current">
-         <property name="toolTip">
-          <string>Electron beam current in mA. BESSY II normal user operation mode: ~300 mA</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
+       <item row="3" column="2" colspan="4">
+        <widget class="QSlider" name="dcm_slider_off">
          <property name="minimum">
-          <double>0.001000000000000</double>
+          <number>1120</number>
          </property>
          <property name="maximum">
-          <double>600.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>50.000000000000000</double>
+          <number>4000</number>
          </property>
          <property name="value">
-          <double>300.000000000000000</double>
+          <number>2000</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QLabel" name="label_param1_6">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>ring energy / GeV</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="3">
-        <widget class="QLabel" name="label_param1_27">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>distance source &lt;-&gt; exp. / m</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1" colspan="4">
-        <widget class="QPushButton" name="calc_source">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Runs a flux density calculation for a bending magnet with settings given in the source-bloc. Depending on the energy range size this can take up to a minute to finish (~10.000 steps ). &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>calculate new source spectrum</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0" colspan="7">
-        <widget class="QLabel" name="source_calc_info">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>365</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>8</pointsize>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="toolTip">
-          <string>The last calculated source spectrum. This array is processed almost instantly with the optic-settings below. </string>
-         </property>
-         <property name="text">
-          <string>calculated source spectrum / keV:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="5">
-        <widget class="QLabel" name="label_param1_26">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>flux area at exp., hor. x ver. / mm</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="7">
-        <widget class="QSpinBox" name="e_step">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of the steps to calculate between lowest and highest energy. Note that a high number of steps requires long time to calculate: almost a minute for ~10.000 steps.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       <item row="2" column="2" colspan="4">
+        <widget class="QSlider" name="dcm_slider_theta">
+         <property name="enabled">
+          <bool>true</bool>
          </property>
          <property name="minimum">
-          <number>100</number>
+          <number>10000</number>
          </property>
          <property name="maximum">
-          <number>1000000</number>
-         </property>
-         <property name="singleStep">
-          <number>1000</number>
+          <number>400000</number>
          </property>
          <property name="value">
-          <number>1000</number>
+          <number>50000</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
-       <item row="6" column="3">
-        <widget class="QDoubleSpinBox" name="e_min">
+       <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="label_2">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Theta / °</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="6">
+        <widget class="QCheckBox" name="dcm_one_crystal">
          <property name="toolTip">
-          <string>The lowest energy you want to calculate.</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="minimum">
-          <double>0.100000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>250.000000000000000</double>
-         </property>
-         <property name="value">
-          <double>0.100000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="4">
-        <widget class="QLabel" name="label_3">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, reflectivity of only one crystal is considered: &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dcm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dcm_spol) ** &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;instead of&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dcm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dcm_spol) ** 4&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
-          <string>to:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <string>1 crystal only</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="0" colspan="3">
-        <widget class="QLabel" name="label_param1_4">
+       <item row="0" column="2">
+        <widget class="QComboBox" name="dcm_orientation">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>0</width>
+           <width>50</width>
            <height>22</height>
           </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>energy range / keV from:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0" colspan="8">
-        <widget class="QProgressBar" name="progressBar">
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>13</height>
-          </size>
-         </property>
-         <property name="baseSize">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="value">
-          <number>0</number>
-         </property>
-         <property name="textVisible">
-          <bool>false</bool>
-         </property>
-         <property name="format">
-          <string>%p%</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="6">
-        <widget class="QLabel" name="label_param1_5">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>steps:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="3">
-        <widget class="QLabel" name="label_param1_9">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>calculate flux density per:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="5" colspan="2">
-        <widget class="QLabel" name="label_param1_7">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>ring current / mA</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="7">
-        <widget class="QCheckBox" name="source_out">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Take out the source spectrum and calculate only the transmitivity/reflectivity of the chosen optical elements. Almost no computational load required. Changes in the energy range incorporated immediately. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="layoutDirection">
           <enum>Qt::RightToLeft</enum>
          </property>
+         <item>
+          <property name="text">
+           <string>111</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>311</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QSpinBox" name="dcm_harmonics">
+         <property name="toolTip">
+          <string>How many harmonics to calculate?</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="value">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLabel" name="label_4">
          <property name="text">
-          <string>out</string>
+          <string>hkl-indices up to</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
