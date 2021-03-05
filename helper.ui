@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1877</width>
-    <height>1057</height>
+    <height>1063</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -124,7 +124,7 @@
         </widget>
        </item>
        <item row="1" column="9">
-        <widget class="QDoubleSpinBox" name="beam_current">
+        <widget class="QDoubleSpinBox" name="ring_current">
          <property name="toolTip">
           <string>Electron beam current in mA. BESSY II normal user operation mode: ~300 mA</string>
          </property>
@@ -194,7 +194,7 @@
           <double>0.100000000000000</double>
          </property>
          <property name="value">
-          <double>7.000000000000000</double>
+          <double>6.800000000000000</double>
          </property>
         </widget>
        </item>
@@ -1013,7 +1013,7 @@
           </font>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;If checked&lt;/span&gt;, the &lt;span style=&quot; font-weight:600;&quot;&gt;DMM is not&lt;/span&gt; part of the spectrum calculation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;On status request: if dmm_y1 &amp;lt; -1mm, we consider the DMM is out.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
@@ -1517,10 +1517,10 @@
        <item row="0" column="0">
         <widget class="QPushButton" name="get_pos">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="text">
-          <string>get current BL status</string>
+          <string>get current status</string>
          </property>
         </widget>
        </item>
@@ -1726,7 +1726,7 @@
           </font>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;If checked&lt;/span&gt;, the &lt;span style=&quot; font-weight:600;&quot;&gt;DCM is not&lt;/span&gt; part of the spectrum calculation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="layoutDirection">
           <enum>Qt::RightToLeft</enum>
@@ -1866,6 +1866,11 @@
            <string>311</string>
           </property>
          </item>
+         <item>
+          <property name="text">
+           <string>333</string>
+          </property>
+         </item>
         </widget>
        </item>
        <item row="1" column="3">
@@ -1905,7 +1910,7 @@
      <x>0</x>
      <y>0</y>
      <width>1877</width>
-     <height>26</height>
+     <height>30</height>
     </rect>
    </property>
   </widget>
@@ -1974,12 +1979,12 @@
    <slot>toggle()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1631</x>
-     <y>276</y>
+     <x>1767</x>
+     <y>247</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1734</x>
-     <y>275</y>
+     <x>1862</x>
+     <y>247</y>
     </hint>
    </hints>
   </connection>
@@ -1990,12 +1995,12 @@
    <slot>toggle()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1716</x>
-     <y>273</y>
+     <x>1862</x>
+     <y>247</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1613</x>
-     <y>278</y>
+     <x>1767</x>
+     <y>247</y>
     </hint>
    </hints>
   </connection>
