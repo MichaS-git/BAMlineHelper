@@ -623,11 +623,11 @@ class Helper(QtCore.QObject):
             e_max = (hc_e * self.window.dmm_corr.value() * 2 * z2_hlm) / (self.window.dmm_2d.value() *
                                                                           self.window.dmm_off.value())
 
-            dmm_emin_line = pg.InfiniteLine(movable=False, angle=90, pen='r', label='DMM-min={value:0.3f}',
+            dmm_emin_line = pg.InfiniteLine(movable=False, angle=90, pen='r', label='DMM-min={value:0.3f}keV',
                                             labelOpts={'position': 0.95, 'color': 'r', 'fill': (200, 200, 200, 50),
                                                        'movable': True})
 
-            dmm_emax_line = pg.InfiniteLine(movable=False, angle=90, pen='r', label='DMM-max={value:0.3f}',
+            dmm_emax_line = pg.InfiniteLine(movable=False, angle=90, pen='r', label='DMM-max={value:0.3f}keV',
                                             labelOpts={'position': 0.95, 'color': 'r', 'fill': (200, 200, 200, 50),
                                                        'movable': True})
 
@@ -696,11 +696,11 @@ class Helper(QtCore.QObject):
             e_min = hc_e / (d_spacing * math.sin(math.radians(theta_max)))
             e_max = hc_e / (d_spacing * math.sin(math.radians(theta_min)))
 
-            dcm_emin_line = pg.InfiniteLine(movable=False, angle=90, pen='b', label='DCM-min={value:0.3f}',
+            dcm_emin_line = pg.InfiniteLine(movable=False, angle=90, pen='b', label='DCM-min={value:0.3f}keV',
                                             labelOpts={'position': 0.95, 'color': 'b', 'fill': (200, 200, 200, 50),
                                                        'movable': True})
 
-            dcm_emax_line = pg.InfiniteLine(movable=False, angle=90, pen='b', label='DCM-max={value:0.3f}',
+            dcm_emax_line = pg.InfiniteLine(movable=False, angle=90, pen='b', label='DCM-max={value:0.3f}keV',
                                             labelOpts={'position': 0.95, 'color': 'b', 'fill': (200, 200, 200, 50),
                                                        'movable': True})
 
@@ -716,6 +716,9 @@ class Helper(QtCore.QObject):
 
         filter_1 = caget('OMS58:25000004_MnuAct.SVAL')
         filter_2 = caget('OMS58:25000005_MnuAct.SVAL')
+
+        print(filter_1)
+        print(filter_2)
 
 
 if __name__ == '__main__':
