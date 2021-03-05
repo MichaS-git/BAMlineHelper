@@ -421,7 +421,7 @@ class Helper(QtCore.QObject):
         else:
             dist_e = 'BW'
 
-        kwargs_wls = dict(eE=self.window.electron_e.value(), eI=self.window.beam_current.value() / 1000,
+        kwargs_wls = dict(eE=self.window.electron_e.value(), eI=self.window.ring_current.value() / 1000,
                           B0=self.window.magnetic_field.value(),
                           distE=dist_e, xPrimeMax=x_prime_max, zPrimeMax=z_prime_max)
         source_wls = rs.BendingMagnet(**kwargs_wls)
@@ -563,8 +563,10 @@ class Helper(QtCore.QObject):
         if self.window.dcm_in.isChecked():
             if self.window.dcm_orientation.currentText() == '111':
                 hkl_orientation = (1, 1, 1)
-            else:
+            elif self.window.dcm_orientation.currentText() == '311':
                 hkl_orientation = (3, 1, 1)
+            elif self.window.dcm_orientation.currentText() == '333':
+                hkl_orientation = (3, 3, 3)
 
             # hkl harmonics
             spectrum_dcm = 0
@@ -614,7 +616,7 @@ class Helper(QtCore.QObject):
         if self.window.dmm_in.isChecked() and self.window.dmm_stripe.currentText() != 'Pd' and \
                 self.window.dmm_off_check.isChecked():
 
-            # this should actually come from EPICS ...
+            # this should actually come from EPICS, but we also want to use it offline, still to do...
             z2_llm = 400  # Soft-Low-Limit Z2 (needed for emin)
             z2_hlm = 1082.5  # Soft-High-Limit Z2 (needed for emax)
 
@@ -641,7 +643,7 @@ class Helper(QtCore.QObject):
         if self.window.dcm_in.isChecked() and self.window.dcm_off_check.isChecked():
             dcm_off = self.window.dcm_off.value()
 
-            # this should actually come from EPICS ...
+            # this should actually come from EPICS, but we also want to use it offline, still to do...
             y2_hlm = 57.
             y2_llm = 5.6
             if y2_hlm > dcm_off / 2:
@@ -712,13 +714,86 @@ class Helper(QtCore.QObject):
 
     def bl_status(self):
 
-        """Get the current motor values and put them to the calculator."""
+        """Get the current motor values and put them to the calculator. Only at BAMline."""
 
+        # the source
+        self.window.ring_current.setValue(caget('bIICurrent:Mnt1'))
+        self.window.magnetic_field.setValue(caget('W7IT1R:rdbk'))
+
+        # the filters
         filter_1 = caget('OMS58:25000004_MnuAct.SVAL')
         filter_2 = caget('OMS58:25000005_MnuAct.SVAL')
 
-        print(filter_1)
-        print(filter_2)
+        if filter_1 == '600um Be':
+            self.window.filter1.setCurrentIndex(0)
+        elif filter_1 == '200um Cu':
+            self.window.filter1.setCurrentIndex(1)
+        elif filter_1 == '200um Al':
+            self.window.filter1.setCurrentIndex(2)
+        elif filter_1 == '1mm Al':
+            self.window.filter1.setCurrentIndex(3)
+
+        if filter_2 == '200um Be':
+            self.window.filter2.setCurrentIndex(0)
+        elif filter_2 == '50um Cu':
+            self.window.filter2.setCurrentIndex(1)
+        elif filter_2 == '1mm Cu':
+            self.window.filter2.setCurrentIndex(2)
+        elif filter_2 == '60um Al':
+            self.window.filter2.setCurrentIndex(3)
+
+        # DMM
+        # if dmm_y1 < -1mm: the DMM is out
+        dmm_y1 = caget('OMS58:25001000.RBV')
+        if dmm_y1 < -1:
+            self.window.dmm_in.setChecked(0)
+        else:
+            # which stripe?
+            dmm_x = caget('OMS58:25003004.RBV')
+            if -27 < dmm_x < -12.5:
+                # Pd stripe
+                self.window.dmm_stripe.setCurrentIndex(2)
+            elif -12.5 <= dmm_x <= 12.5:
+                # W / Si stripe
+                self.window.dmm_stripe.setCurrentIndex(0)
+            elif 12.5 < dmm_x < 27:
+                # Mo / B4C stripe
+                self.window.dmm_stripe.setCurrentIndex(1)
+
+            # stripe correction factor (for now, we let it hard coded in the GUI)
+            # corr_f = caget('Energ:25000007.K')
+            # self.window.dmm_corr.setValue(corr_f)
+
+            # angle first mirror
+            self.window.dmm_theta.setValue(caget('OMS58:25000007.RBV'))
+            # dmm offset
+            self.window.dmm_off.setValue(caget('Energ:25000007y2.B'))
+
+            self.window.dmm_in.setChecked(1)
+
+        # DCM
+        # if dcm_y < -1mm and dcm_theta < 1: the DCM is out
+        dcm_y = caget('OMS58:25001007.RBV')
+        dcm_theta = caget('OMS58:25002000.RBV')
+
+        if dcm_y < -1. and dcm_theta < 1.:
+            self.window.dcm_in.setChecked(0)
+        else:
+            crystal = caget('Energ:25002000selectCrystal')
+            # which crystal orientation?
+            if crystal == 0:
+                self.window.dcm_orientation.setCurrentIndex(0)
+            elif crystal == 1:
+                self.window.dcm_orientation.setCurrentIndex(1)
+            elif crystal == 1:
+                self.window.dcm_orientation.setCurrentIndex(2)
+
+            # crystal angle
+            self.window.dcm_theta.setValue(dcm_theta)
+            # dcm offset
+            self.window.dcm_off.setValue(caget('Energ:25002000z2.B'))
+
+            self.window.dcm_in.setChecked(1)
 
 
 if __name__ == '__main__':
