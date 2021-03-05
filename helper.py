@@ -137,7 +137,7 @@ class Helper(QtCore.QObject):
         self.energy = np.linspace(self.window.e_min.value() * 1000, self.window.e_max.value() * 1000,
                                   self.window.e_step.value())
         self.source_spectrum_energy = self.energy
-        self.source_calc_thread()  # first plot at startup
+        #self.source_calc_thread()  # first plot at startup
 
         # perform calculations when there was user input
         self.window.calc_fwhm.stateChanged.connect(self.bl_spectrum)
