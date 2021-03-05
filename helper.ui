@@ -1519,6 +1519,9 @@
          <property name="enabled">
           <bool>true</bool>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Get the current source (ring current + magnetic field) and BL status.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>get current status</string>
          </property>
@@ -1726,7 +1729,7 @@
           </font>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;On status request: if dcm_y &amp;lt; -1mm and dcm_theta &amp;lt; 1, we consider the DCM is out.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="layoutDirection">
           <enum>Qt::RightToLeft</enum>
