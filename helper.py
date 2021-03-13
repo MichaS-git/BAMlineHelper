@@ -8,7 +8,7 @@ import numpy as np
 
 import helper_calc as calc
 
-from PySide2 import QtWidgets, QtUiTools, QtCore
+from PySide2 import QtWidgets, QtUiTools, QtCore, QtGui
 from PySide2.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
 
 import xrt.backends.raycing.materials as rm
@@ -137,7 +137,7 @@ class Helper(QtCore.QObject):
         self.energy = np.linspace(self.window.e_min.value() * 1000, self.window.e_max.value() * 1000,
                                   self.window.e_step.value())
         self.source_spectrum_energy = self.energy
-        #self.source_calc_thread()  # first plot at startup
+        self.source_calc_thread()  # first plot at startup
 
         # perform calculations when there was user input
         self.window.calc_fwhm.stateChanged.connect(self.bl_spectrum)
@@ -166,7 +166,6 @@ class Helper(QtCore.QObject):
         self.window.dmm_stripe.currentIndexChanged.connect(self.choose_dmm_stripe)
         self.window.dmm_2d.valueChanged.connect(self.new_dmm_parameters)
         self.window.dmm_gamma.valueChanged.connect(self.new_dmm_parameters)
-        self.window.dmm_corr.valueChanged.connect(self.bl_spectrum)
         self.window.layer_pairs.valueChanged.connect(self.bl_spectrum)
         self.window.dmm_slider_theta.valueChanged.connect(self.dmm_slider_theta_conversion)
         self.window.dmm_slider_off.valueChanged.connect(self.dmm_slider_off_conversion)
@@ -190,6 +189,7 @@ class Helper(QtCore.QObject):
 
         # buttons that connect to EPICS
         self.window.get_pos.clicked.connect(self.bl_status)
+        self.window.action_button.clicked.connect(self.bl_move)
 
     def view_box(self):
 
@@ -244,7 +244,6 @@ class Helper(QtCore.QObject):
 
         self.window.dmm_2d.setEnabled(1)
         self.window.layer_pairs.setEnabled(1)
-        self.window.dmm_corr.setEnabled(1)
         self.window.dmm_gamma.setEnabled(1)
 
         # gamma: ration of the high absorbing layer (in our case bottom) to the 2D-value
@@ -253,19 +252,15 @@ class Helper(QtCore.QObject):
         if self.window.dmm_stripe.currentText() == 'W / Si':
             self.window.dmm_2d.setValue(6.619)  # 2D-value in nm
             self.window.layer_pairs.setValue(70)
-            self.window.dmm_corr.setValue(1.036)
         if self.window.dmm_stripe.currentText() == 'Mo / B4C':
             self.window.dmm_2d.setValue(5.736)  # 2D-value in nm
             self.window.layer_pairs.setValue(180)
-            self.window.dmm_corr.setValue(1.023)
         if self.window.dmm_stripe.currentText() == 'Pd':
             self.window.dmm_gamma.setValue(1)
             self.window.dmm_2d.setValue(0)
             self.window.layer_pairs.setValue(0)
-            self.window.dmm_corr.setValue(1)
             self.window.dmm_2d.setEnabled(0)
             self.window.layer_pairs.setEnabled(0)
-            self.window.dmm_corr.setEnabled(0)
             self.window.dmm_gamma.setEnabled(0)
 
     def new_dmm_parameters(self):
@@ -620,10 +615,14 @@ class Helper(QtCore.QObject):
             z2_llm = 400  # Soft-Low-Limit Z2 (needed for emin)
             z2_hlm = 1082.5  # Soft-High-Limit Z2 (needed for emax)
 
-            e_min = (hc_e * self.window.dmm_corr.value() * 2 * z2_llm) / (self.window.dmm_2d.value() *
-                                                                          self.window.dmm_off.value())
-            e_max = (hc_e * self.window.dmm_corr.value() * 2 * z2_hlm) / (self.window.dmm_2d.value() *
-                                                                          self.window.dmm_off.value())
+            # correction factor for EPICS-beamoffset
+            if self.window.dmm_stripe.currentText() == 'W / Si':
+                dmm_corr = 1.036
+            elif self.window.dmm_stripe.currentText() == 'Mo / B4C':
+                dmm_corr = 1.023
+
+            e_min = (hc_e * dmm_corr * 2 * z2_llm) / (self.window.dmm_2d.value() * self.window.dmm_off.value())
+            e_max = (hc_e * dmm_corr * 2 * z2_hlm) / (self.window.dmm_2d.value() * self.window.dmm_off.value())
 
             dmm_emin_line = pg.InfiniteLine(movable=False, angle=90, pen='r', label='DMM-min={value:0.3f}keV',
                                             labelOpts={'position': 0.95, 'color': 'r', 'fill': (200, 200, 200, 50),
@@ -760,10 +759,6 @@ class Helper(QtCore.QObject):
                 # Mo / B4C stripe
                 self.window.dmm_stripe.setCurrentIndex(1)
 
-            # stripe correction factor (for now, we let it hard coded in the GUI)
-            # corr_f = caget('Energ:25000007.K')
-            # self.window.dmm_corr.setValue(corr_f)
-
             # angle first mirror
             self.window.dmm_theta.setValue(caget('OMS58:25000007.RBV'))
             # dmm offset
@@ -795,8 +790,90 @@ class Helper(QtCore.QObject):
 
             self.window.dcm_in.setChecked(1)
 
+    def bl_move(self):
+
+        """Move the BL motors to the desired calculator positions."""
+
+        destination_text = 'Confirm following movements:\n'
+
+        # the filters
+        filter1 = self.window.filter1.currentText()
+        filter2 = self.window.filter2.currentText()
+        filter1_epics = caget('OMS58:25000004_MnuAct.SVAL')
+        filter2_epics = caget('OMS58:25000005_MnuAct.SVAL')
+        if filter1 != filter1_epics:
+            destination_text = destination_text + '\nmoving Filter 1:\t %s --> %s' % (filter1_epics, filter1)
+        if filter2 != filter2_epics:
+            destination_text = destination_text + '\nmoving Filter 2:\t %s --> %s' % (filter2_epics, filter2)
+
+        if self.window.dmm_in.isChecked():
+
+            # user wants the following stripe
+            dmm_stripe = self.window.dmm_stripe.currentText()
+
+            # what DMM Calculation is currently set?
+            dmm_band_epics = caget('Energ:25000007selectBand')
+            # the energy calculation in EPICS is either W/Si (dmm_band_epics=0) or Mo/B4C (dmm_band_epics=1), no Pd
+            if dmm_band_epics == 0:
+                dmm_band_epics = 'W / Si'
+            else:
+                dmm_band_epics = 'Mo / B4C'
+
+            if dmm_stripe != dmm_band_epics and dmm_stripe != 'Pd':
+                destination_text = destination_text + '\nsetting EPICS calculation DMM-Stripe:\t %s --> %s' % \
+                                   (dmm_band_epics, dmm_stripe)
+
+            # what's with the offset?
+            dmm_off = self.window.dmm_off.value()
+            dmm_off_epics = caget('Energ:25000007y2.B')
+
+            if dmm_off != dmm_off_epics:
+                destination_text = destination_text + '\nsetting DMM-Offset:\t %.2f --> %.2f' % (dmm_off_epics, dmm_off)
+
+            if dmm_stripe == 'Pd':
+                dmm_x = caget('OMS58:25003004.RBV')
+                if dmm_x != -23.:
+                    destination_text = destination_text + '\nmoving DMM-X:\t %.2f --> -23' % dmm_x
+
+                dmm_theta = self.window.dmm_theta.value()
+                dmm_theta_epics = caget('OMS58:25000007.RBV')
+                if dmm_theta != dmm_theta_epics:
+                    destination_text = destination_text + '\nmoving DMM-Theta-1:\t %.4f --> %.4f' \
+                                                          '\nmoving DMM-Theta-2 to\t %.4f' \
+                                       % (dmm_theta_epics, dmm_theta, dmm_theta)
+
+                #dmm_z2 =
+
+
+
+
+
+        # show a message box to confirm movement
+        msg_box = QtGui.QMessageBox()
+        msg_box.setWindowTitle('Go there!')
+        msg_box.setIcon(QtGui.QMessageBox.Warning)
+        if destination_text == 'Confirm following movements:\n':
+            destination_text = 'There is nothing to move, we are already there.'
+            msg_box.setStandardButtons(QtGui.QMessageBox.Ok)
+        else:
+            msg_box.setStandardButtons(QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok)
+            msg_box.setEscapeButton(QtGui.QMessageBox.Cancel)
+            msg_box.setDefaultButton(QtGui.QMessageBox.Ok)
+            msg_box.setInformativeText('Are you sure you want to proceed ?')
+        msg_box.setText(destination_text)
+        retval = msg_box.exec_()
+        # Cancel = 4194304
+        # Ok = 1024
+        if destination_text != 'There is nothing to move, we are already there.':
+            if retval == 1024:
+                # user confirmed
+                return print('moving')
+            # anything else than OK
+            return print('not moving')
+
 
 if __name__ == '__main__':
+    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)  # console warning fix
     app = QtWidgets.QApplication(sys.argv)
     main = Helper()
     main.show()

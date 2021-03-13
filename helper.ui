@@ -775,22 +775,25 @@
          <property name="toolTip">
           <string>Note that 600µm W is only for theoretical use, it is not part of the beamline.</string>
          </property>
+         <property name="currentText">
+          <string>none</string>
+         </property>
          <property name="currentIndex">
           <number>4</number>
          </property>
          <item>
           <property name="text">
-           <string>600µm Be</string>
+           <string>600um Be</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>200µm Cu</string>
+           <string>200um Cu</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>200µm Al</string>
+           <string>200um Al</string>
           </property>
          </item>
          <item>
@@ -805,7 +808,7 @@
          </item>
          <item>
           <property name="text">
-           <string>600µm W</string>
+           <string>600um W</string>
           </property>
          </item>
         </widget>
@@ -880,17 +883,20 @@
          <property name="toolTip">
           <string>Note that 200µm W is only for theoretical use, it is not part of the beamline.</string>
          </property>
+         <property name="currentText">
+          <string>none</string>
+         </property>
          <property name="currentIndex">
           <number>5</number>
          </property>
          <item>
           <property name="text">
-           <string>200µm Be</string>
+           <string>200um Be</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>50µm Cu</string>
+           <string>50um Cu</string>
           </property>
          </item>
          <item>
@@ -900,12 +906,12 @@
          </item>
          <item>
           <property name="text">
-           <string>500µm Al</string>
+           <string>500um Al</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>60µm Al</string>
+           <string>60um Al</string>
           </property>
          </item>
          <item>
@@ -915,7 +921,7 @@
          </item>
          <item>
           <property name="text">
-           <string>200µm W</string>
+           <string>200um W</string>
           </property>
          </item>
         </widget>
@@ -1131,59 +1137,6 @@
            <string>Pd</string>
           </property>
          </item>
-        </widget>
-       </item>
-       <item row="1" column="5">
-        <widget class="QDoubleSpinBox" name="dmm_corr">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Determined correction factor for the choosen multilayer-stripe at BAMline.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="minimum">
-          <double>1.000000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>2.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.001000000000000</double>
-         </property>
-         <property name="value">
-          <double>1.036000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="4">
-        <widget class="QLabel" name="label_param3_4">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>corr. factor beamOffset</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
         </widget>
        </item>
        <item row="4" column="3">
@@ -1507,7 +1460,7 @@
        <item row="0" column="1">
         <widget class="QPushButton" name="action_button">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="text">
           <string>Go there!</string>
