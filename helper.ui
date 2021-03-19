@@ -773,24 +773,27 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>Note that 600µm W is only for theoretical use, it is not part of the beamline.</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="currentText">
+          <string>none</string>
          </property>
          <property name="currentIndex">
           <number>4</number>
          </property>
          <item>
           <property name="text">
-           <string>600µm Be</string>
+           <string>600um Be</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>200µm Cu</string>
+           <string>200um Cu</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>200µm Al</string>
+           <string>200um Al</string>
           </property>
          </item>
          <item>
@@ -801,11 +804,6 @@
          <item>
           <property name="text">
            <string>none</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>600µm W</string>
           </property>
          </item>
         </widget>
@@ -878,19 +876,22 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>Note that 200µm W is only for theoretical use, it is not part of the beamline.</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="currentText">
+          <string>200um Be</string>
          </property>
          <property name="currentIndex">
-          <number>5</number>
+          <number>0</number>
          </property>
          <item>
           <property name="text">
-           <string>200µm Be</string>
+           <string>200um Be</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>50µm Cu</string>
+           <string>50um Cu</string>
           </property>
          </item>
          <item>
@@ -900,22 +901,12 @@
          </item>
          <item>
           <property name="text">
-           <string>500µm Al</string>
+           <string>500um Al</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>60µm Al</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>none</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>200µm W</string>
+           <string>60um Al</string>
           </property>
          </item>
         </widget>
@@ -951,50 +942,48 @@
     <item row="2" column="1">
      <widget class="QGroupBox" name="groupBox">
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="1" column="0" colspan="3">
-        <widget class="QLabel" name="label_param1_25">
+       <item row="1" column="3">
+        <widget class="QSpinBox" name="layer_pairs">
+         <property name="toolTip">
+          <string>The number of the multilayer layer-pairs.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>1000</number>
+         </property>
+         <property name="value">
+          <number>70</number>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_parameter_3">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
-         <property name="minimumSize">
+         <property name="maximumSize">
           <size>
-           <width>0</width>
-           <height>22</height>
+           <width>50</width>
+           <height>16777215</height>
           </size>
          </property>
          <property name="font">
           <font>
+           <pointsize>12</pointsize>
            <weight>50</weight>
            <bold>false</bold>
           </font>
          </property>
          <property name="text">
-          <string>number of layer-pairs</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="QCheckBox" name="dmm_off_check">
-         <property name="maximumSize">
-          <size>
-           <width>20</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Plot the Enery-Constraints depending on the offset.</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
+          <string>DMM</string>
          </property>
         </widget>
        </item>
@@ -1026,39 +1015,59 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="label_parameter_3">
+       <item row="4" column="4">
+        <widget class="QLabel" name="label_param1_22">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
-         <property name="maximumSize">
+         <property name="minimumSize">
           <size>
-           <width>50</width>
-           <height>16777215</height>
+           <width>0</width>
+           <height>22</height>
           </size>
          </property>
          <property name="font">
           <font>
-           <pointsize>12</pointsize>
            <weight>50</weight>
            <bold>false</bold>
           </font>
          </property>
          <property name="text">
-          <string>DMM</string>
+          <string>bottomLayer / Å</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="0" column="5">
-        <widget class="QCheckBox" name="dmm_one_ml">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, reflectivity of only one mirror is considered: &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dmm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dmm_spol) ** &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;instead of&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dmm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dmm_spol) ** 4&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <item row="3" column="4">
+        <widget class="QLabel" name="label_param1_21">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
          </property>
          <property name="text">
-          <string>1 mirror only</string>
+          <string>topLayer / Å</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1099,93 +1108,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="2">
-        <widget class="QComboBox" name="dmm_stripe">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="layoutDirection">
-          <enum>Qt::RightToLeft</enum>
-         </property>
-         <item>
-          <property name="text">
-           <string>W / Si</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Mo / B4C</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Pd</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="1" column="5">
-        <widget class="QDoubleSpinBox" name="dmm_corr">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Determined correction factor for the choosen multilayer-stripe at BAMline.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="minimum">
-          <double>1.000000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>2.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.001000000000000</double>
-         </property>
-         <property name="value">
-          <double>1.036000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="4">
-        <widget class="QLabel" name="label_param3_4">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>corr. factor beamOffset</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
        <item row="4" column="3">
         <widget class="QDoubleSpinBox" name="dmm_gamma">
          <property name="toolTip">
@@ -1208,6 +1130,22 @@
          </property>
         </widget>
        </item>
+       <item row="6" column="2" colspan="3">
+        <widget class="QSlider" name="dmm_slider_off">
+         <property name="minimum">
+          <number>400</number>
+         </property>
+         <property name="maximum">
+          <number>5000</number>
+         </property>
+         <property name="value">
+          <number>800</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
        <item row="3" column="3">
         <widget class="QDoubleSpinBox" name="dmm_2d">
          <property name="toolTip">
@@ -1224,190 +1162,6 @@
          </property>
          <property name="value">
           <double>6.619000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
-        <widget class="QSpinBox" name="layer_pairs">
-         <property name="toolTip">
-          <string>The number of the multilayer layer-pairs.</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>1000</number>
-         </property>
-         <property name="value">
-          <number>70</number>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="3">
-        <widget class="QLabel" name="label_param1_23">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>2D / nm</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="4">
-        <widget class="QLabel" name="label_param1_21">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>topLayer / Å</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="4">
-        <widget class="QLabel" name="label_param1_22">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>bottomLayer / Å</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="5">
-        <widget class="QDoubleSpinBox" name="d_bottom_layer">
-         <property name="toolTip">
-          <string>Thickness bottomLayer in angstrom.</string>
-         </property>
-         <property name="frame">
-          <bool>false</bool>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-         <property name="buttonSymbols">
-          <enum>QAbstractSpinBox::NoButtons</enum>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="value">
-          <double>13.238000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="5">
-        <widget class="QDoubleSpinBox" name="d_top_layer">
-         <property name="toolTip">
-          <string>Thickness topLayer in angstrom.</string>
-         </property>
-         <property name="wrapping">
-          <bool>false</bool>
-         </property>
-         <property name="frame">
-          <bool>false</bool>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-         <property name="buttonSymbols">
-          <enum>QAbstractSpinBox::NoButtons</enum>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="maximum">
-          <double>999.990000000000009</double>
-         </property>
-         <property name="value">
-          <double>19.856999999999999</double>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="5">
-        <widget class="QDoubleSpinBox" name="dmm_theta">
-         <property name="toolTip">
-          <string>Angle of the first DMM-mirror.</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="decimals">
-          <number>4</number>
-         </property>
-         <property name="minimum">
-          <double>0.000100000000000</double>
-         </property>
-         <property name="maximum">
-          <double>3.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.005000000000000</double>
-         </property>
-         <property name="value">
-          <double>0.500000000000000</double>
          </property>
         </widget>
        </item>
@@ -1443,19 +1197,125 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="2" colspan="3">
-        <widget class="QSlider" name="dmm_slider_off">
+       <item row="5" column="5">
+        <widget class="QDoubleSpinBox" name="dmm_theta">
+         <property name="toolTip">
+          <string>Angle of the first DMM-mirror.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
          <property name="minimum">
-          <number>400</number>
+          <double>0.000100000000000</double>
          </property>
          <property name="maximum">
-          <number>5000</number>
+          <double>3.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.005000000000000</double>
          </property>
          <property name="value">
-          <number>800</number>
+          <double>0.500000000000000</double>
          </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QLabel" name="label">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Theta / °</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="3">
+        <widget class="QLabel" name="label_param1_25">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>number of layer-pairs</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QComboBox" name="dmm_stripe">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="layoutDirection">
+          <enum>Qt::RightToLeft</enum>
+         </property>
+         <property name="frame">
+          <bool>true</bool>
+         </property>
+         <item>
+          <property name="text">
+           <string>W / Si</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Mo / B4C</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Pd</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QCheckBox" name="dmm_off_check">
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Plot the Enery-Constraints depending on the offset.</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -1475,16 +1335,116 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0" colspan="2">
-        <widget class="QLabel" name="label">
+       <item row="3" column="5">
+        <widget class="QDoubleSpinBox" name="d_top_layer">
+         <property name="toolTip">
+          <string>Thickness topLayer in angstrom.</string>
+         </property>
+         <property name="wrapping">
+          <bool>false</bool>
+         </property>
+         <property name="frame">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="buttonSymbols">
+          <enum>QAbstractSpinBox::NoButtons</enum>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="maximum">
+          <double>999.990000000000009</double>
+         </property>
+         <property name="value">
+          <double>19.856999999999999</double>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="5">
+        <widget class="QDoubleSpinBox" name="d_bottom_layer">
+         <property name="toolTip">
+          <string>Thickness bottomLayer in angstrom.</string>
+         </property>
+         <property name="frame">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="buttonSymbols">
+          <enum>QAbstractSpinBox::NoButtons</enum>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="value">
+          <double>13.238000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="3">
+        <widget class="QLabel" name="label_param1_23">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
          <property name="font">
           <font>
-           <weight>75</weight>
-           <bold>true</bold>
+           <weight>50</weight>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
-          <string>Theta / °</string>
+          <string>2D / nm</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4" colspan="2">
+        <widget class="QCheckBox" name="goto_e_max">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, the maximum Energy is used as the GoTo-Value. Otherwise the Theta angle is used. Palladium (Pd) is driven only via Theta.&lt;/p&gt;&lt;p&gt;Why? Due to a different Energycalculation of the EPICS-Energy-Record. Still under development ...&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="layoutDirection">
+          <enum>Qt::RightToLeft</enum>
+         </property>
+         <property name="text">
+          <string>go to Energy_max</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4" colspan="2">
+        <widget class="QCheckBox" name="dmm_one_ml">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, reflectivity of only one mirror is considered: &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dmm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dmm_spol) ** &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;instead of&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dmm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dmm_spol) ** 4&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="layoutDirection">
+          <enum>Qt::RightToLeft</enum>
+         </property>
+         <property name="text">
+          <string>1 mirror only</string>
          </property>
         </widget>
        </item>
@@ -1494,7 +1454,7 @@
     <item row="4" column="1">
      <widget class="QGroupBox" name="groupBox">
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="1" column="0" colspan="2">
+       <item row="1" column="0" colspan="3">
         <widget class="QTextBrowser" name="text_calculations">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
@@ -1504,7 +1464,7 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
+       <item row="0" column="2">
         <widget class="QPushButton" name="action_button">
          <property name="enabled">
           <bool>false</bool>
@@ -1520,7 +1480,7 @@
           <bool>true</bool>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Get the current source (ring current + magnetic field) and BL status.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Get the current source (ring current + magnetic field) and BL status.&lt;/p&gt;&lt;p&gt;Keep in mind: DMM-Energy from EPICS does not correspond with the maximum energy calculated in BAMlineHelper. See also the &amp;quot;go to Energy_max&amp;quot; tooltip.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>get current status</string>
@@ -1836,6 +1796,9 @@
         <widget class="QCheckBox" name="dcm_one_crystal">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, reflectivity of only one crystal is considered: &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dcm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dcm_spol) ** &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#6897bb;&quot;&gt;instead of&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6; background-color:#2b2b2b;&quot;&gt;spectrum_dcm = &lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#8888c6;&quot;&gt;abs&lt;/span&gt;&lt;span style=&quot; font-family:'JetBrains Mono,monospace'; color:#a9b7c6;&quot;&gt;(dcm_spol) ** 4&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="layoutDirection">
+          <enum>Qt::RightToLeft</enum>
          </property>
          <property name="text">
           <string>1 crystal only</string>
