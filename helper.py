@@ -123,6 +123,7 @@ class Helper(QtCore.QObject):
 
         # class variables
         self.flux_xrt_wls = []  # empty flux array at startup
+        self.energy_max = 1  # Maximum Energy of the spectrum in keV, determined in spectrum_evaluation
 
         self.threadpool = QThreadPool()
         # print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
@@ -303,8 +304,6 @@ class Helper(QtCore.QObject):
         if '1' in filter1_text:
             self.window.d_filter1.setValue(1000.)
 
-        if 'none' in filter2_text:
-            self.window.d_filter2.setValue(0.)
         if '50' in filter2_text:
             self.window.d_filter2.setValue(50.)
         if '60' in filter2_text:
@@ -357,6 +356,8 @@ class Helper(QtCore.QObject):
 
         """Evaluate the spectrum: calculate maxima, FWHM, etc. ..."""
 
+        self.energy_max = energy_range[spectrum.argmax()] / 1000
+
         # FWHM is calculated out of the left- and right-edge (see helper_calc.py module)
         if self.window.calc_fwhm.isChecked() is True:
             left, right, sw = calc.peak_pos(energy_range, spectrum, schwelle=self.window.fwhm.value())
@@ -384,13 +385,10 @@ class Helper(QtCore.QObject):
             width = abs(right - left)
             center = 0.5 * (right + left)
             self.window.text_calculations.setText('maximum = %.2E at %.3f keV\nFWHM = %.3f eV; center(FWHM) = %.3f keV'
-                                                  % (spectrum.max(), energy_range[spectrum.argmax()] / 1000, width,
-                                                     center / 1000))
+                                                  % (spectrum.max(), self.energy_max, width, center / 1000))
 
         else:
-            self.window.text_calculations.setText('maximum = %.2E at %.3f keV' % (spectrum.max(),
-                                                                                  energy_range[spectrum.argmax()] /
-                                                                                  1000))
+            self.window.text_calculations.setText('maximum = %.2E at %.3f keV' % (spectrum.max(), self.energy_max))
 
     def xrt_source_wls(self, progress_callback):
 
@@ -474,9 +472,6 @@ class Helper(QtCore.QObject):
                 filter1 = rm.Material('Be', rho=1.848)
             elif 'Cu' in filter1_text:
                 filter1 = rm.Material('Cu', rho=8.92)
-            # tungsten is experimental only, BAMline doesn't have this filter
-            elif 'W' in filter1_text:
-                filter1 = rm.Material('W', rho=19.25)
             else:
                 filter1 = None
 
@@ -486,9 +481,6 @@ class Helper(QtCore.QObject):
                 filter2 = rm.Material('Be', rho=1.848)
             elif 'Cu' in filter2_text:
                 filter2 = rm.Material('Cu', rho=8.92)
-            # tungsten is experimental only, BAMline doesn't have this filter
-            elif 'W' in filter2_text:
-                filter2 = rm.Material('W', rho=19.25)
             else:
                 filter2 = None
 
@@ -556,9 +548,8 @@ class Helper(QtCore.QObject):
         # the DCM
         spectrum_dcm = 1
         if self.window.dcm_in.isChecked():
-            if self.window.dcm_orientation.currentText() == '111':
-                hkl_orientation = (1, 1, 1)
-            elif self.window.dcm_orientation.currentText() == '311':
+            hkl_orientation = (1, 1, 1)
+            if self.window.dcm_orientation.currentText() == '311':
                 hkl_orientation = (3, 1, 1)
             elif self.window.dcm_orientation.currentText() == '333':
                 hkl_orientation = (3, 3, 3)
@@ -616,9 +607,8 @@ class Helper(QtCore.QObject):
             z2_hlm = 1082.5  # Soft-High-Limit Z2 (needed for emax)
 
             # correction factor for EPICS-beamoffset
-            if self.window.dmm_stripe.currentText() == 'W / Si':
-                dmm_corr = 1.036
-            elif self.window.dmm_stripe.currentText() == 'Mo / B4C':
+            dmm_corr = 1.036
+            if self.window.dmm_stripe.currentText() == 'Mo / B4C':
                 dmm_corr = 1.023
 
             e_min = (hc_e * dmm_corr * 2 * z2_llm) / (self.window.dmm_2d.value() * self.window.dmm_off.value())
@@ -731,6 +721,8 @@ class Helper(QtCore.QObject):
             self.window.filter1.setCurrentIndex(2)
         elif filter_1 == '1mm Al':
             self.window.filter1.setCurrentIndex(3)
+        elif filter_1 == 'none':
+            self.window.filter1.setCurrentIndex(4)
 
         if filter_2 == '200um Be':
             self.window.filter2.setCurrentIndex(0)
@@ -738,8 +730,10 @@ class Helper(QtCore.QObject):
             self.window.filter2.setCurrentIndex(1)
         elif filter_2 == '1mm Cu':
             self.window.filter2.setCurrentIndex(2)
-        elif filter_2 == '60um Al':
+        elif filter_2 == '500um Al':
             self.window.filter2.setCurrentIndex(3)
+        elif filter_2 == '60um Al':
+            self.window.filter2.setCurrentIndex(4)
 
         # DMM
         # if dmm_y1 < -1mm: the DMM is out
@@ -794,6 +788,8 @@ class Helper(QtCore.QObject):
 
         """Move the BL motors to the desired calculator positions."""
 
+        bl_offset = 0
+
         destination_text = 'Confirm following movements:\n'
 
         # the filters
@@ -806,12 +802,16 @@ class Helper(QtCore.QObject):
         if filter2 != filter2_epics:
             destination_text = destination_text + '\nmoving Filter 2:\t %s --> %s' % (filter2_epics, filter2)
 
-        if self.window.dmm_in.isChecked():
+        if self.window.dmm_in.isChecked() and self.window.dcm_in.isChecked():
+
+            print('to do!')
+
+        elif self.window.dmm_in.isChecked():
 
             # user wants the following stripe
             dmm_stripe = self.window.dmm_stripe.currentText()
 
-            # what DMM Calculation is currently set?
+            # what DMM calculation is currently set?
             dmm_band_epics = caget('Energ:25000007selectBand')
             # the energy calculation in EPICS is either W/Si (dmm_band_epics=0) or Mo/B4C (dmm_band_epics=1), no Pd
             if dmm_band_epics == 0:
@@ -825,6 +825,7 @@ class Helper(QtCore.QObject):
 
             # what's with the offset?
             dmm_off = self.window.dmm_off.value()
+            bl_offset += dmm_off
             dmm_off_epics = caget('Energ:25000007y2.B')
 
             if dmm_off != dmm_off_epics:
@@ -835,6 +836,13 @@ class Helper(QtCore.QObject):
                 if dmm_x != -23.:
                     destination_text = destination_text + '\nmoving DMM-X:\t %.2f --> -23' % dmm_x
 
+            if self.window.goto_e_max.isChecked() and dmm_stripe != 'Pd':
+
+                dmm_energy = caget('Energ:25000007rbv')
+                if dmm_energy != self.energy_max:
+                    destination_text = destination_text + '\nmoving DMM-Energy:\t %.3f --> %.3f' \
+                                       % (dmm_energy, self.energy_max)
+            else:
                 dmm_theta = self.window.dmm_theta.value()
                 dmm_theta_epics = caget('OMS58:25000007.RBV')
                 if dmm_theta != dmm_theta_epics:
@@ -842,11 +850,44 @@ class Helper(QtCore.QObject):
                                                           '\nmoving DMM-Theta-2 to\t %.4f' \
                                        % (dmm_theta_epics, dmm_theta, dmm_theta)
 
-                #dmm_z2 =
+                dmm_z2 = dmm_off / math.tan(math.radians(2 * dmm_theta))
+                dmm_z2_epics = caget('OMS58:25001002.RBV')
 
+                if dmm_z2 != dmm_z2_epics:
+                    destination_text = destination_text + '\nmoving DMM-Z_2:\t %.2f --> %.2f' % (dmm_z2_epics, dmm_z2)
 
+        elif self.window.dcm_in.isChecked():
 
+            # user wants the following crystalorientation
+            dcm_orientation = self.window.dcm_orientation.currentText()
 
+            # what DCM orientation is currently set?
+            dcm_orientation_epics = caget('Energ:25002000selectCrystal')
+            if dcm_orientation_epics == 0:
+                dcm_orientation_epics = '111'
+            elif dcm_orientation_epics == 1:
+                dcm_orientation_epics = '311'
+            elif dcm_orientation_epics == 2:
+                dcm_orientation_epics = '333'
+
+            if dcm_orientation != dcm_orientation_epics:
+                destination_text = destination_text + '\nsetting EPICS DCM calculation Crystal:\t %s --> %s' % \
+                                   (dcm_orientation_epics, dcm_orientation)
+
+            # what's with the offset?
+            dcm_off = self.window.dcm_off.value()
+            bl_offset += dcm_off
+            dcm_off_epics = caget('Energ:25002000z2.B')
+
+            if dcm_off != dcm_off_epics:
+                destination_text = destination_text + '\nsetting DCM-Offset:\t %.2f --> %.2f' % (dcm_off_epics, dcm_off)
+
+            dcm_energy = caget('Energ:25002000rbv')
+            if dcm_energy != self.energy_max:
+                destination_text = destination_text + '\nmoving DCM-Energy:\t %.3f --> %.3f' \
+                                   % (dcm_energy, self.energy_max)
+
+        destination_text = destination_text + '\ntotal BL offset is:\t %.2f' % bl_offset
 
         # show a message box to confirm movement
         msg_box = QtGui.QMessageBox()
