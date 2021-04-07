@@ -995,7 +995,7 @@ class Helper(QtCore.QObject):
                     #print("caput(%s, %s)" % (i, move_motor_list[i]))
                 return
             # anything else than OK
-            return print('not moving')
+            return
 
 
 if __name__ == '__main__':
