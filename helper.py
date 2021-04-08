@@ -825,14 +825,13 @@ class Helper(QtCore.QObject):
             else:
                 dmm_band_epics = 'Mo / B4C'
 
-            if dmm_stripe != dmm_band_epics and dmm_stripe != 'Pd':
+            if dmm_stripe != 'Pd':
                 destination_text = destination_text + '\nsetting EPICS calculation DMM-Stripe:\t %s --> %s' % \
                                    (dmm_band_epics, dmm_stripe)
-            # we must process 'Energ:25000007selectBand' in order to drive DMM_X from Pd to W/Si or Mo/B4C
-            if dmm_stripe == 'W / Si':
-                move_motor_list['Energ:25000007selectBand'] = 0.
-            else:
-                move_motor_list['Energ:25000007selectBand'] = 1.
+                if dmm_stripe == 'W / Si':
+                    move_motor_list['Energ:25000007selectBand'] = 0.
+                else:
+                    move_motor_list['Energ:25000007selectBand'] = 1.
 
             # what's with the offset?
             dmm_off = self.window.dmm_off.value()
