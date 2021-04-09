@@ -773,13 +773,13 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string/>
          </property>
          <property name="currentText">
           <string>none</string>
          </property>
          <property name="currentIndex">
-          <number>4</number>
+          <number>0</number>
          </property>
          <item>
           <property name="text">
@@ -876,7 +876,7 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string/>
          </property>
          <property name="currentText">
           <string>200um Be</string>
@@ -1422,7 +1422,7 @@
        <item row="1" column="4" colspan="2">
         <widget class="QCheckBox" name="goto_e_max">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, the maximum Energy is used as the GoTo-Value. Otherwise the Theta angle is used. Palladium (Pd) is driven only via Theta.&lt;/p&gt;&lt;p&gt;Why? Due to a different Energycalculation of the EPICS-Energy-Record. Still under development ...&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, the maximum-flux Energy is used as the GoTo-Value. Otherwise the Theta angle is used. Palladium (Pd) is driven only via Theta.&lt;/p&gt;&lt;p&gt;Why? Due to a different Energycalculation of the EPICS-Energy-Record. Still under development ...&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="layoutDirection">
           <enum>Qt::RightToLeft</enum>
@@ -1467,7 +1467,7 @@
        <item row="0" column="2">
         <widget class="QPushButton" name="action_button">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="text">
           <string>Go there!</string>
