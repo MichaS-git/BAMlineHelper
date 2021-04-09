@@ -796,6 +796,7 @@ class Helper(QtCore.QObject):
         """Move the BL motors to the desired calculator positions."""
 
         bl_offset = 0
+        dmm_off = 0
         move_motor_list = {}
         white_beam = False
         destination_text = 'Confirm following movements:\n'
@@ -826,8 +827,12 @@ class Helper(QtCore.QObject):
                 dmm_band_epics = 'Mo / B4C'
 
             if dmm_stripe != 'Pd':
-                destination_text = destination_text + '\nsetting EPICS calculation DMM-Stripe:\t %s --> %s' % \
-                                   (dmm_band_epics, dmm_stripe)
+                # tell the user only if there is really a change of selectBand
+                if dmm_stripe != dmm_band_epics:
+                    destination_text = destination_text + '\nsetting EPICS calculation DMM-Stripe:\t %s --> %s' % \
+                                       (dmm_band_epics, dmm_stripe)
+
+                # but we need to process selectBand anyway to drive DMM-X
                 if dmm_stripe == 'W / Si':
                     move_motor_list['Energ:25000007selectBand'] = 0.
                 else:
@@ -848,7 +853,7 @@ class Helper(QtCore.QObject):
                     destination_text = destination_text + '\nmoving DMM-X:\t %.2f --> -23' % dmm_x
                     move_motor_list['OMS58:25003004'] = -23.
 
-            if self.window.goto_e_max.isChecked() and dmm_stripe != 'Pd':
+            if self.window.goto_e_max.isChecked() and dmm_stripe != 'Pd' and not self.window.dcm_in.isChecked():
 
                 dmm_energy = round(caget('Energ:25000007rbv'), 3)
                 if dmm_energy != round(self.energy_max, 3):
@@ -878,7 +883,7 @@ class Helper(QtCore.QObject):
                 destination_text = destination_text + '\nmoving DMM out:'
                 destination_text = destination_text + '\nmoving DMM-Y_1 to\t -5'
                 move_motor_list['OMS58:25001000'] = -5.
-                destination_text = destination_text + '\nmoving DMM-Theta-1+2 to\t ~0'
+                destination_text = destination_text + '\nmoving DMM-Theta-1+2 to ~0'
                 move_motor_list['OMS58:25000007'] = 0.05
                 move_motor_list['OMS58:25001003'] = 0.
                 destination_text = destination_text + '\nmoving DMM-Y_2 to\t 15'
@@ -922,9 +927,16 @@ class Helper(QtCore.QObject):
                 destination_text = destination_text + '\nsetting DCM-Energy:\t %.3f --> %.3f' \
                                    % (dcm_energy, round(self.energy_max, 3))
                 move_motor_list['Energ:25002000cff'] = round(self.energy_max, 3)
+
+            # if the DMM is also in, put the DCM to the DMM-Offset
+            if dmm_off > 0.:
+                dcm_y = round(caget('OMS58:25001007.RBV'), 2)
+                if dcm_y != dmm_off:
+                    destination_text = destination_text + '\nmoving DCM-Y:\t %.2f --> %.2f' % (dcm_y, dmm_off)
+                    move_motor_list['OMS58:25001007'] = dmm_off
         else:
             # take the DCM out if necessary
-            dcm_y = round(caget('OMS58:25001007.RBV'), 5)
+            dcm_y = round(caget('OMS58:25001007.RBV'), 2)
             if dcm_y > -5.:
                 destination_text = destination_text + '\nmoving DCM out:'
                 destination_text = destination_text + '\nmoving DCM-Y to\t -5'
@@ -936,11 +948,18 @@ class Helper(QtCore.QObject):
 
         # move the Beamstop a bit under the beam
         beamstop = round(caget('OMS58:25003001.RBV'), 2)
+        beamstop_hlm = round(caget('OMS58:25003001.HLM'), 2)
+        beamstop_at_hlm = caget('OMS58:25003001.HLS')
         s1_ver_size = round(caget('Slot:25000002gapSize.RBV'), 2)
         beamstop_req = round(bl_offset - s1_ver_size / 2 - 2., 2)
         if beamstop != beamstop_req:
-            destination_text = destination_text + '\nmoving Beamstop:\t %.2f --> %.2f' % (beamstop, beamstop_req)
-            move_motor_list['OMS58:25003001'] = beamstop_req
+            if beamstop_req < beamstop_hlm:
+                destination_text = destination_text + '\nmoving Beamstop:\t %.2f --> %.2f' % (beamstop, beamstop_req)
+                move_motor_list['OMS58:25003001'] = beamstop_req
+            elif beamstop_at_hlm == 0:
+                destination_text = destination_text + '\nmoving Beamstop:\t %.2f --> %.2f (~High-Limit)' \
+                                   % (beamstop, beamstop_hlm)
+                move_motor_list['OMS58:25003001'] = beamstop_hlm
 
         # move s2_ver_pos to the total bl_offset
         s2_ver_pos = round(caget('Slot:25003006gapPos.RBV'), 2)
