@@ -188,9 +188,11 @@ class Helper(QtCore.QObject):
         self.window.dcm_off.valueChanged.connect(self.bl_spectrum)
         self.window.dcm_harmonics.valueChanged.connect(self.bl_spectrum)
 
-        # buttons that connect to EPICS
+        # status and GoTo parameters
         self.window.get_pos.clicked.connect(self.bl_status)
         self.window.action_button.clicked.connect(self.bl_move)
+        self.window.off_ctTable.toggled.connect(self.toggle_expTable_off)
+        self.window.off_expTable.toggled.connect(self.toggle_ctTable_off)
 
     def view_box(self):
 
@@ -384,7 +386,7 @@ class Helper(QtCore.QObject):
 
             width = abs(right - left)
             center = 0.5 * (right + left)
-            self.window.text_calculations.setText('maximum = %.2E at %.3f keV\nFWHM = %.3f eV; center(FWHM) = %.3f keV'
+            self.window.text_calculations.setText('maximum = %.2E at %.3f keV\nFWHM = %.3f eV\ncenter(FWHM) = %.3f keV'
                                                   % (spectrum.max(), self.energy_max, width, center / 1000))
 
         else:
@@ -791,6 +793,22 @@ class Helper(QtCore.QObject):
 
             self.window.dcm_in.setChecked(1)
 
+    def toggle_expTable_off(self):
+
+        """Only EXP_TISCH or CT-Table_Y can be checked."""
+
+        self.window.off_expTable.blockSignals(True)
+        self.window.off_expTable.setChecked(False)
+        self.window.off_expTable.blockSignals(False)
+
+    def toggle_ctTable_off(self):
+
+        """Only EXP_TISCH or CT-Table_Y can be checked."""
+
+        self.window.off_ctTable.blockSignals(True)
+        self.window.off_ctTable.setChecked(False)
+        self.window.off_ctTable.blockSignals(False)
+
     def bl_move(self):
 
         """Move the BL motors to the desired calculator positions."""
@@ -798,6 +816,7 @@ class Helper(QtCore.QObject):
         bl_offset = 0
         dmm_off = 0
         move_motor_list = {}
+        bl_offset_diff = 0
         white_beam = False
         destination_text = 'Confirm following movements:\n'
 
@@ -814,6 +833,12 @@ class Helper(QtCore.QObject):
             move_motor_list['OMS58:25000005_Mnu'] = filter2
 
         if self.window.dmm_in.isChecked():
+
+            # if the DMM is out, drive it in (DMM_Y_1 -> 0)
+            dmm_y1 = round(caget('OMS58:25001000.RBV'), 2)
+            if dmm_y1 < -1.:
+                destination_text = destination_text + '\nmoving DMM-Y_1:\t %.2f --> 0' % dmm_y1
+                move_motor_list['OMS58:25001000'] = 0
 
             # user wants the following stripe
             dmm_stripe = self.window.dmm_stripe.currentText()
@@ -891,6 +916,22 @@ class Helper(QtCore.QObject):
 
         if self.window.dcm_in.isChecked():
 
+            # if the DCM is out, drive it in
+            dcm_y = round(caget('OMS58:25001007.RBV'), 2)
+            if dcm_y < -1.:
+                # put the DCM to the DMM-Offset if necessary
+                if self.window.dmm_in.isChecked():
+                    dmm_off = self.window.dmm_off.value()
+                    destination_text = destination_text + '\nmoving DCM-Y:\t %.2f --> %.2f' % (dcm_y, dmm_off)
+                    move_motor_list['OMS58:25001007'] = dmm_off
+                else:
+                    destination_text = destination_text + '\nmoving DCM-Y:\t %.2f --> 0' % dcm_y
+                    move_motor_list['OMS58:25001007'] = 0
+            elif self.window.dmm_in.isChecked():
+                dmm_off = self.window.dmm_off.value()
+                destination_text = destination_text + '\nmoving DCM-Y:\t %.2f --> %.2f' % (dcm_y, dmm_off)
+                move_motor_list['OMS58:25001007'] = dmm_off
+
             # user wants the following crystalorientation
             dcm_orientation = self.window.dcm_orientation.currentText()
 
@@ -966,6 +1007,8 @@ class Helper(QtCore.QObject):
         if s2_ver_pos != bl_offset:
             destination_text = destination_text + '\nmoving S2_verPos:\t %.2f --> %.2f' % (s2_ver_pos, bl_offset)
             move_motor_list['Slot:25003006gapPos'] = bl_offset
+            # use s2_ver_pos as trigger to move extra motors
+            bl_offset_diff = bl_offset - s2_ver_pos
 
         # move the window to the total bl_offset
         window = round(caget('OMS58:25003007.RBV'), 2)
@@ -977,6 +1020,21 @@ class Helper(QtCore.QObject):
             destination_text = destination_text + '\n\nATTENTION! You are setting the white beam!\nOnly possible with' \
                                                   ' closed NebenBeamShutter.'
             white_beam = True
+
+        # move extra motors
+        if bl_offset_diff != 0:
+            if self.window.off_expTable.isChecked():
+                exp_table = round(caget('OMS58:25004004.RBV'), 2)
+                exp_table_new = exp_table + bl_offset_diff
+                destination_text = destination_text + '\nmoving EXP_TISCH:\t %.2f --> %.2f' % (exp_table, exp_table_new)
+                move_motor_list['OMS58:25004004'] = exp_table_new
+            if self.window.off_ctTable.isChecked():
+                ct_table = round(caget('OMS58:25004003.RBV'), 2)
+                ct_table_new = ct_table + bl_offset_diff
+                destination_text = destination_text + '\nmoving CT-Table_Y:\t %.2f --> %.2f' % (ct_table, ct_table_new)
+                move_motor_list['OMS58:25004003'] = ct_table_new
+            if self.window.off_custom.toPlainText():
+                print(self.window.off_custom.toPlainText())
 
         # show a message box to confirm movement
         msg_box = QtGui.QMessageBox()
