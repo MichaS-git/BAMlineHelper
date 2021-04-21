@@ -176,6 +176,7 @@ class Helper(QtCore.QObject):
         self.window.dmm_one_ml.stateChanged.connect(self.bl_spectrum)
         self.window.dmm_in.stateChanged.connect(self.bl_spectrum)
         self.window.dmm_off_check.stateChanged.connect(self.bl_spectrum)
+        self.window.dmm_with_filters.stateChanged.connect(self.bl_spectrum)
 
         # user input to dcm parameters
         self.window.dcm_in.stateChanged.connect(self.bl_spectrum)
@@ -438,24 +439,155 @@ class Helper(QtCore.QObject):
 
     def bl_spectrum(self):
 
-        # filter constellation
-        filter1_text = self.window.filter1.currentText()
-        filter2_text = self.window.filter2.currentText()
-
-        # if nothing is selected --> return
-        if 'none' in filter1_text and 'none' in filter2_text and self.window.source_in.isChecked() is False and \
-                self.window.dmm_in.isChecked() is False and self.window.dcm_in.isChecked() is False:
-            self.window.Graph.clear()
-            text = pg.TextItem(text='Nothing to plot... choose your settings!', color=(200, 0, 0), anchor=(0.5, 0.5))
-            self.window.Graph.addItem(text)
-            # self.window.Graph.plotItem.enableAutoRange(enable=False)
-            return
-
         # without a source-spectrum the energy_array comes "def energy_range", otherwise from "def xrt_source_wls"
         if self.window.source_in.isChecked() is False:
             energy_array = self.energy
         else:
             energy_array = self.source_spectrum_energy
+
+        # the DMM
+        spectrum_dmm = 1
+        if self.window.dmm_in.isChecked():
+            ml_system = self.window.dmm_stripe.currentText()
+            # The original W/Si-multilayer of the BAMline: d(Mo) / d(Mo + B4C) = 0.4
+            # d_Mo = (5.736 / 2) * 0.4 = 2.868 * 0.4 = 1.1472 nm
+            # d_B4C = 2.868 - 1.1472 = 1.7208 nm
+            # 1 nm = 10 angstrom
+            # rho == density in g * cm-3 at room temperature
+
+            if ml_system == 'Mo / B4C':
+                mt = rm.Material(['B', 'C'], [4, 1], rho=2.52)  # top_layer
+                mb = rm.Material('Mo', rho=10.28)  # bottom_layer
+                ms = rm.Material('Si', rho=2.336)  # substrate
+
+                # topLayer, thickness topLayer in angstrom, bLayer, thickness bLayer in angstrom, number of layer pairs,
+                # substrate
+                ml = rm.Multilayer(mt, self.window.d_top_layer.value(), mb, self.window.d_bottom_layer.value(),
+                                   self.window.layer_pairs.value(), ms)
+
+            elif ml_system == 'W / Si':
+                mt = rm.Material('Si', rho=2.336)  # top_layer
+                mb = rm.Material('W', rho=19.25)  # bottom_layer
+
+                # topLayer, thickness topLayer in angstrom, bLayer, thickness bLayer in angstrom, number of layer pairs,
+                # substrate (in this case same material as top_layer)
+                ml = rm.Multilayer(mt, self.window.d_top_layer.value(), mb, self.window.d_bottom_layer.value(),
+                                   self.window.layer_pairs.value(), mt)
+            else:
+                ml = rm.Material('Pd', rho=11.99)
+
+            # reflection
+            theta = self.window.dmm_theta.value()
+            dmm_spol, dmm_ppol = ml.get_amplitude(energy_array, math.sin(math.radians(theta)))[0:2]
+
+            # calculate reflection of only one mirror (not 100% sure if that is correct...)
+            if self.window.dmm_one_ml.isChecked():
+                spectrum_dmm = abs(dmm_spol) ** 2
+            else:
+                spectrum_dmm = abs(dmm_spol) ** 4
+
+            # autoselect the filters, depending on theta_1
+            if self.window.dmm_with_filters.isChecked() and not self.window.dcm_in.isChecked() and ml_system != 'Pd':
+                
+                self.window.filter1.blockSignals(True)
+                self.window.filter2.blockSignals(True)
+                self.window.d_filter1.blockSignals(True)
+                self.window.d_filter2.blockSignals(True)
+                
+                if ml_system == 'W / Si':
+                    if theta >= 1.1119:  # <= 10 keV
+                        self.window.filter1.setCurrentIndex(0)
+                        self.window.d_filter1.setValue(600.)
+                        self.window.filter2.setCurrentIndex(0)
+                        self.window.d_filter2.setValue(200.)
+                    elif 1.1119 > theta >= 0.4448:  # <= 25 keV
+                        self.window.filter1.setCurrentIndex(2)
+                        self.window.d_filter1.setValue(200.)
+                        self.window.filter2.setCurrentIndex(0)
+                        self.window.d_filter2.setValue(200.)
+                    elif 0.4448 > theta >= 0.3177:  # <= 35 keV
+                        self.window.filter1.setCurrentIndex(0)
+                        self.window.d_filter1.setValue(600.)
+                        self.window.filter2.setCurrentIndex(3)
+                        self.window.d_filter2.setValue(500.)
+                    elif 0.3177 > theta >= 0.2647:  # <= 42 keV
+                        self.window.filter1.setCurrentIndex(3)
+                        self.window.d_filter1.setValue(1000.)
+                        self.window.filter2.setCurrentIndex(0)
+                        self.window.d_filter2.setValue(200.)
+                    elif 0.2647 > theta >= 0.2224:  # <= 50 keV
+                        self.window.filter1.setCurrentIndex(3)
+                        self.window.d_filter1.setValue(1000.)
+                        self.window.filter2.setCurrentIndex(1)
+                        self.window.d_filter2.setValue(50.)
+                    elif 0.2224 > theta >= 0.1544:  # <= 72 keV
+                        self.window.filter1.setCurrentIndex(1)
+                        self.window.d_filter1.setValue(200.)
+                        self.window.filter2.setCurrentIndex(0)
+                        self.window.d_filter2.setValue(200.)
+                    elif theta < 0.1544:  # <= 95 keV
+                        self.window.filter1.setCurrentIndex(0)
+                        self.window.d_filter1.setValue(600.)
+                        self.window.filter2.setCurrentIndex(2)
+                        self.window.d_filter2.setValue(1000.)
+                elif ml_system == 'Mo / B4C':
+                    if theta >= 0.8386:  # <= 15 keV
+                        self.window.filter1.setCurrentIndex(0)
+                        self.window.d_filter1.setValue(600.)
+                        self.window.filter2.setCurrentIndex(0)
+                        self.window.d_filter2.setValue(200.)
+                    elif 0.8386 > theta >= 0.4193:  # <= 30 keV
+                        self.window.filter1.setCurrentIndex(2)
+                        self.window.d_filter1.setValue(200.)
+                        self.window.filter2.setCurrentIndex(0)
+                        self.window.d_filter2.setValue(200.)
+                    elif 0.4193 > theta >= 0.2995:  # <= 42 keV
+                        self.window.filter1.setCurrentIndex(0)
+                        self.window.d_filter1.setValue(600.)
+                        self.window.filter2.setCurrentIndex(3)
+                        self.window.d_filter2.setValue(500.)
+                    elif 0.2995 > theta >= 0.2516:  # <= 50 keV
+                        self.window.filter1.setCurrentIndex(3)
+                        self.window.d_filter1.setValue(1000.)
+                        self.window.filter2.setCurrentIndex(0)
+                        self.window.d_filter2.setValue(200.)
+                    elif 0.2516 > theta >= 0.:  # <=  keV
+                        self.window.filter1.setCurrentIndex(3)
+                        self.window.d_filter1.setValue(1000.)
+                        self.window.filter2.setCurrentIndex(1)
+                        self.window.d_filter2.setValue(50.)
+
+
+                self.window.filter1.blockSignals(False)
+                self.window.filter2.blockSignals(False)
+                self.window.d_filter1.blockSignals(False)
+                self.window.d_filter2.blockSignals(False)
+
+        # the DCM
+        spectrum_dcm = 1
+        if self.window.dcm_in.isChecked():
+            hkl_orientation = (1, 1, 1)
+            if self.window.dcm_orientation.currentText() == '311':
+                hkl_orientation = (3, 1, 1)
+            elif self.window.dcm_orientation.currentText() == '333':
+                hkl_orientation = (3, 3, 3)
+
+            # hkl harmonics
+            spectrum_dcm = 0
+            for i in range(self.window.dcm_harmonics.value()):
+                hkl_ebene = tuple(j * (i + 1) for j in hkl_orientation)
+                crystal = rm.CrystalSi(hkl=hkl_ebene)
+                dcm_spol, dcm_ppol = crystal.get_amplitude(energy_array,
+                                                           math.sin(math.radians(self.window.dcm_theta.value())))
+                # calculate reflection of only one crystal (not 100% sure if that is correct...)
+                if self.window.dcm_one_crystal.isChecked() is True:
+                    spectrum_dcm = spectrum_dcm + abs(dcm_spol) ** 2
+                else:
+                    spectrum_dcm = spectrum_dcm + abs(dcm_spol) ** 4
+
+        # filter constellation
+        filter1_text = self.window.filter1.currentText()
+        filter2_text = self.window.filter2.currentText()
 
         transm_f1 = 1
         transm_f2 = 1
@@ -505,69 +637,6 @@ class Helper(QtCore.QObject):
             if m < 1e-15:  # otherwise the plot ranges to e-200 ...
                 m = 1e-15
             transm_f_total[transm_f_total < 1e-15] = m
-
-        # the DMM
-        spectrum_dmm = 1
-        if self.window.dmm_in.isChecked():
-            ml_system = self.window.dmm_stripe.currentText()
-            # The original W/Si-multilayer of the BAMline: d(Mo) / d(Mo + B4C) = 0.4
-            # d_Mo = (5.736 / 2) * 0.4 = 2.868 * 0.4 = 1.1472 nm
-            # d_B4C = 2.868 - 1.1472 = 1.7208 nm
-            # 1 nm = 10 angstrom
-            # rho == density in g * cm-3 at room temperature
-
-            if ml_system == 'Mo / B4C':
-                mt = rm.Material(['B', 'C'], [4, 1], rho=2.52)  # top_layer
-                mb = rm.Material('Mo', rho=10.28)  # bottom_layer
-                ms = rm.Material('Si', rho=2.336)  # substrate
-
-                # topLayer, thickness topLayer in angstrom, bLayer, thickness bLayer in angstrom, number of layer pairs,
-                # substrate
-                ml = rm.Multilayer(mt, self.window.d_top_layer.value(), mb, self.window.d_bottom_layer.value(),
-                                   self.window.layer_pairs.value(), ms)
-
-            elif ml_system == 'W / Si':
-                mt = rm.Material('Si', rho=2.336)  # top_layer
-                mb = rm.Material('W', rho=19.25)  # bottom_layer
-
-                # topLayer, thickness topLayer in angstrom, bLayer, thickness bLayer in angstrom, number of layer pairs,
-                # substrate (in this case same material as top_layer)
-                ml = rm.Multilayer(mt, self.window.d_top_layer.value(), mb, self.window.d_bottom_layer.value(),
-                                   self.window.layer_pairs.value(), mt)
-            else:
-                ml = rm.Material('Pd', rho=11.99)
-
-            # reflection
-            theta = self.window.dmm_theta.value()
-            dmm_spol, dmm_ppol = ml.get_amplitude(energy_array, math.sin(math.radians(theta)))[0:2]
-
-            # calculate reflection of only one mirror (not 100% sure if that is correct...)
-            if self.window.dmm_one_ml.isChecked() is True:
-                spectrum_dmm = abs(dmm_spol) ** 2
-            else:
-                spectrum_dmm = abs(dmm_spol) ** 4
-
-        # the DCM
-        spectrum_dcm = 1
-        if self.window.dcm_in.isChecked():
-            hkl_orientation = (1, 1, 1)
-            if self.window.dcm_orientation.currentText() == '311':
-                hkl_orientation = (3, 1, 1)
-            elif self.window.dcm_orientation.currentText() == '333':
-                hkl_orientation = (3, 3, 3)
-
-            # hkl harmonics
-            spectrum_dcm = 0
-            for i in range(self.window.dcm_harmonics.value()):
-                hkl_ebene = tuple(j * (i + 1) for j in hkl_orientation)
-                crystal = rm.CrystalSi(hkl=hkl_ebene)
-                dcm_spol, dcm_ppol = crystal.get_amplitude(energy_array,
-                                                           math.sin(math.radians(self.window.dcm_theta.value())))
-                # calculate reflection of only one crystal (not 100% sure if that is correct...)
-                if self.window.dcm_one_crystal.isChecked() is True:
-                    spectrum_dcm = spectrum_dcm + abs(dcm_spol) ** 2
-                else:
-                    spectrum_dcm = spectrum_dcm + abs(dcm_spol) ** 4
 
         # what constellation do we have?
         if self.window.source_in.isChecked() is False:
@@ -820,6 +889,11 @@ class Helper(QtCore.QObject):
         white_beam = False
         destination_text = 'Confirm following movements:\n'
 
+        # the MessageBox gets populated later
+        msg_box = QtGui.QMessageBox()
+        msg_box.setWindowTitle('Go there!')
+        msg_box.setIcon(QtGui.QMessageBox.Warning)
+
         # the filters
         filter1 = self.window.filter1.currentText()
         filter2 = self.window.filter2.currentText()
@@ -879,13 +953,14 @@ class Helper(QtCore.QObject):
                     move_motor_list['OMS58:25003004'] = -23.
 
             if self.window.goto_e_max.isChecked() and dmm_stripe != 'Pd' and not self.window.dcm_in.isChecked():
-
+                # forward energy_max to the EPICS-energy-record
                 dmm_energy = round(caget('Energ:25000007rbv'), 3)
                 if dmm_energy != round(self.energy_max, 3):
                     destination_text = destination_text + '\nsetting DMM-Energy:\t %.3f --> %.3f' \
                                        % (dmm_energy, round(self.energy_max, 3))
                     move_motor_list['Energ:25000007cff'] = round(self.energy_max, 3)
             else:
+                # forward the theta-angle
                 dmm_theta = self.window.dmm_theta.value()
                 dmm_theta_epics = round(caget('OMS58:25000007.RBV'), 5)
                 if dmm_theta != dmm_theta_epics:
@@ -895,8 +970,19 @@ class Helper(QtCore.QObject):
                     move_motor_list['OMS58:25000007'] = dmm_theta
                     move_motor_list['OMS58:25001003'] = dmm_theta
 
+                # calculate the corresponding dmm_z2
                 dmm_z2 = round(dmm_off / math.tan(math.radians(2 * dmm_theta)), 2)
                 dmm_z2_epics = round(caget('OMS58:25001002.RBV'), 2)
+                dmm_z2_hlm = round(caget('OMS58:25001002.HLM'), 2)
+
+                if dmm_z2 > dmm_z2_hlm:
+                    dmm_off_needed = round(dmm_z2_hlm * math.tan(math.radians(2 * dmm_theta)), 2)
+                    destination_text = 'The calculated DMM_Z2 = %.2f exceeds the High-Limit. You need a ' \
+                                       'DMM-Offset = %.2f or lower. Please recalculate!' % (dmm_z2, dmm_off_needed)
+                    msg_box.setStandardButtons(QtGui.QMessageBox.Ok)
+                    msg_box.setText(destination_text)
+                    msg_box.exec_()
+                    return
 
                 if dmm_z2 != dmm_z2_epics:
                     destination_text = destination_text + '\nmoving DMM-Z_2:\t %.2f --> %.2f' % (dmm_z2_epics, dmm_z2)
@@ -1036,10 +1122,6 @@ class Helper(QtCore.QObject):
             if self.window.off_custom.toPlainText():
                 print(self.window.off_custom.toPlainText())
 
-        # show a message box to confirm movement
-        msg_box = QtGui.QMessageBox()
-        msg_box.setWindowTitle('Go there!')
-        msg_box.setIcon(QtGui.QMessageBox.Warning)
         if destination_text == 'Confirm following movements:\n':
             destination_text = 'There is nothing to move, we are already there.'
             msg_box.setStandardButtons(QtGui.QMessageBox.Ok)
