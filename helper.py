@@ -551,12 +551,16 @@ class Helper(QtCore.QObject):
                         self.window.d_filter1.setValue(1000.)
                         self.window.filter2.setCurrentIndex(0)
                         self.window.d_filter2.setValue(200.)
-                    elif 0.2516 > theta >= 0.:  # <=  keV
-                        self.window.filter1.setCurrentIndex(3)
-                        self.window.d_filter1.setValue(1000.)
-                        self.window.filter2.setCurrentIndex(1)
-                        self.window.d_filter2.setValue(50.)
-
+                    elif 0.2516 > theta >= 0.1877:  # <= 67 keV
+                        self.window.filter1.setCurrentIndex(1)
+                        self.window.d_filter1.setValue(200.)
+                        self.window.filter2.setCurrentIndex(3)
+                        self.window.d_filter2.setValue(500.)
+                    elif theta < 0.1397:  # <= 90 keV
+                        self.window.filter1.setCurrentIndex(0)
+                        self.window.d_filter1.setValue(600.)
+                        self.window.filter2.setCurrentIndex(2)
+                        self.window.d_filter2.setValue(1000.)
 
                 self.window.filter1.blockSignals(False)
                 self.window.filter2.blockSignals(False)
@@ -959,6 +963,10 @@ class Helper(QtCore.QObject):
                     destination_text = destination_text + '\nsetting DMM-Energy:\t %.3f --> %.3f' \
                                        % (dmm_energy, round(self.energy_max, 3))
                     move_motor_list['Energ:25000007cff'] = round(self.energy_max, 3)
+
+                # adjust s2_ver_size to the theta angle if its to wide open
+                # we need the approximate theta angle
+
             else:
                 # forward the theta-angle
                 dmm_theta = self.window.dmm_theta.value()
@@ -969,6 +977,9 @@ class Helper(QtCore.QObject):
                                        % (dmm_theta_epics, dmm_theta, dmm_theta)
                     move_motor_list['OMS58:25000007'] = dmm_theta
                     move_motor_list['OMS58:25001003'] = dmm_theta
+
+                # adjust s2_ver_size to the theta angle if its to wide open
+                #s2_ver_size_epics =
 
                 # calculate the corresponding dmm_z2
                 dmm_z2 = round(dmm_off / math.tan(math.radians(2 * dmm_theta)), 2)
@@ -1093,7 +1104,7 @@ class Helper(QtCore.QObject):
         if s2_ver_pos != bl_offset:
             destination_text = destination_text + '\nmoving S2_verPos:\t %.2f --> %.2f' % (s2_ver_pos, bl_offset)
             move_motor_list['Slot:25003006gapPos'] = bl_offset
-            # use s2_ver_pos as trigger to move extra motors
+            # use s2_ver_pos as trigger to move the experimental table
             bl_offset_diff = bl_offset - s2_ver_pos
 
         # move the window to the total bl_offset
@@ -1108,20 +1119,22 @@ class Helper(QtCore.QObject):
             white_beam = True
 
         # move extra motors
+        if self.window.off_ctTable.isChecked():
+            ct_table = round(caget('OMS58:25004003.RBV'), 2)
+            if ct_table != bl_offset:
+                destination_text = destination_text + '\nmoving CT-Table_Y:\t %.2f --> %.2f' % (ct_table, bl_offset)
+                move_motor_list['OMS58:25004003'] = bl_offset
+
         if bl_offset_diff != 0:
             if self.window.off_expTable.isChecked():
                 exp_table = round(caget('OMS58:25004004.RBV'), 2)
                 exp_table_new = exp_table + bl_offset_diff
                 destination_text = destination_text + '\nmoving EXP_TISCH:\t %.2f --> %.2f' % (exp_table, exp_table_new)
                 move_motor_list['OMS58:25004004'] = exp_table_new
-            if self.window.off_ctTable.isChecked():
-                ct_table = round(caget('OMS58:25004003.RBV'), 2)
-                ct_table_new = ct_table + bl_offset_diff
-                destination_text = destination_text + '\nmoving CT-Table_Y:\t %.2f --> %.2f' % (ct_table, ct_table_new)
-                move_motor_list['OMS58:25004003'] = ct_table_new
             if self.window.off_custom.toPlainText():
                 print(self.window.off_custom.toPlainText())
 
+        # show the message box to confirm movements
         if destination_text == 'Confirm following movements:\n':
             destination_text = 'There is nothing to move, we are already there.'
             msg_box.setStandardButtons(QtGui.QMessageBox.Ok)
