@@ -413,7 +413,7 @@ class Helper(QtCore.QObject):
         x_prime_max = self.window.hor_acceptance.value()
         z_prime_max = self.window.ver_acceptance.value()
 
-        theta = np.linspace(-1., 1., 51) * x_prime_max * 1e-3
+        theta = np.linspace(-1.5, 1.5, 20) * x_prime_max * 1e-3
         psi = np.linspace(-1., 1., 51) * z_prime_max * 1e-3
         dtheta, dpsi = theta[1] - theta[0], psi[1] - psi[0]
 
