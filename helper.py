@@ -15,6 +15,7 @@ from PySide2.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
 
 import xrt.backends.raycing.materials as rm
 import xrt.backends.raycing.sources as rs
+import xraydb
 
 import pyqtgraph as pg
 from epics import caget, caput, camonitor
@@ -164,6 +165,7 @@ class Helper(QtCore.QObject):
         self.window.filter2.currentIndexChanged.connect(self.set_filter_size)
         self.window.d_filter1.valueChanged.connect(self.bl_spectrum)
         self.window.d_filter2.valueChanged.connect(self.bl_spectrum)
+        self.window.plot_elements.stateChanged.connect(self.bl_spectrum)
 
         # user input to dmm parameters
         self.window.dmm_stripe.currentIndexChanged.connect(self.choose_dmm_stripe)
@@ -444,7 +446,7 @@ class Helper(QtCore.QObject):
 
     def bl_spectrum(self):
 
-        # without a source-spectrum the energy_array comes "def energy_range", otherwise from "def xrt_source_wls"
+        # without a source-spectrum the energy_array comes from "def energy_range", otherwise from "def xrt_source_wls"
         if self.window.source_in.isChecked() is False:
             energy_array = self.energy
         else:
@@ -775,6 +777,43 @@ class Helper(QtCore.QObject):
 
             dcm_emin_line.setPos([e_min, e_min])
             dcm_emax_line.setPos([e_max, e_max])
+
+        # plot element edges from the xray-database, syntax is: Cu [K L1] + Fe [K] + Al
+        if self.window.plot_elements.isChecked() and self.window.elements.toPlainText():
+            text = self.window.elements.toPlainText()
+
+            # separate the elements
+            elements = text.split('+')
+
+            # go through the elements and separate the edges
+            label_pos = 1.
+            for element in elements:
+                # if no edges given, show all edges within the chosen energy-range
+                if '[' not in element:
+                    all_edges = xraydb.xray_edges(element.strip())
+                    for edge in all_edges:
+                        energy = float(all_edges[edge].energy) / 1000.
+                        if self.window.e_min.value() > energy or energy > self.window.e_max.value():
+                            break
+                        label = element + ' ' + edge + ' ' + str(energy)
+                        label_pos -= 0.025
+                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen=(255, 0, 0, 255), label=label,
+                                                    labelOpts={'position': label_pos, 'color': 'b',
+                                                               'fill': (200, 200, 200, 50), 'movable': True})
+                        self.window.Graph.addItem(edge_line)
+                        edge_line.setPos([energy, energy])
+                else:
+                    edges = element[element.find("[")+1:element.find("]")].split(',')
+                    element = element.rsplit()[0]
+                    for edge in edges:
+                        energy = xraydb.xray_edge(element, edge.strip(), energy_only=True) / 1000.
+                        label = element + ' ' + edge + ' ' + str(energy)
+                        label_pos -= 0.025
+                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen=(255, 0, 0, 255), label=label,
+                                                    labelOpts={'position': label_pos, 'color': 'b',
+                                                               'fill': (200, 200, 200, 50), 'movable': True})
+                        self.window.Graph.addItem(edge_line)
+                        edge_line.setPos([energy, energy])
 
     def bl_status(self):
 
