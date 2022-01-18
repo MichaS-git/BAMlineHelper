@@ -819,9 +819,15 @@ class Helper(QtCore.QObject):
 
         """Get the current motor values and put them to the calculator. Only at BAMline."""
 
-        # the source
-        self.window.ring_current.setValue(caget('bIICurrent:Mnt1'))
-        self.window.magnetic_field.setValue(caget('W7IT1R:rdbk'))
+        # the source, get the ring current and the magnetic field; if PVs are not accessible, use default values
+        ring_current = caget('bIICurrent:Mnt1')
+        if not ring_current:
+            ring_current = 300.
+        self.window.ring_current.setValue(ring_current)
+        magnetic_field = caget('W7IT1R:rdbk')
+        if not magnetic_field:
+            magnetic_field = 7.
+        self.window.magnetic_field.setValue(magnetic_field)
 
         # the filters
         filter_1 = caget('OMS58:25000004_MnuAct.SVAL')
