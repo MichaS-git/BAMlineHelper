@@ -794,7 +794,7 @@ class Helper(QtCore.QObject):
                     for edge in all_edges:
                         energy = float(all_edges[edge].energy) / 1000.
                         if self.window.e_min.value() > energy or energy > self.window.e_max.value():
-                            break
+                            continue
                         label = element + ' ' + edge + ' ' + str(energy)
                         label_pos -= 0.025
                         edge_line = pg.InfiniteLine(movable=False, angle=90, pen=(255, 0, 0, 255), label=label,
