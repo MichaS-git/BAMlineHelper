@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1877</width>
-    <height>1150</height>
+    <height>1190</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,7 +35,11 @@
      </widget>
     </item>
     <item row="0" column="1">
-     <widget class="QLineEdit" name="pathLine"/>
+     <widget class="QLineEdit" name="pathLine">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+     </widget>
     </item>
     <item row="1" column="0" rowspan="8" colspan="2">
      <widget class="PlotWidget" name="Graph">
@@ -638,12 +642,12 @@ p, li { white-space: pre-wrap; }
          </property>
          <item>
           <property name="text">
-           <string>W / Si</string>
+           <string>W/Si</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Mo / B4C</string>
+           <string>Mo/B4C</string>
           </property>
          </item>
          <item>
@@ -1998,7 +2002,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>1877</width>
-     <height>30</height>
+     <height>32</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -2026,6 +2030,9 @@ p, li { white-space: pre-wrap; }
    </property>
   </action>
   <action name="actionLoad_h5">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Load h5-File</string>
    </property>
