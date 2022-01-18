@@ -260,10 +260,10 @@ class Helper(QtCore.QObject):
         # gamma: ration of the high absorbing layer (in our case bottom) to the 2D-value
         self.window.dmm_gamma.setValue(0.4)
 
-        if self.window.dmm_stripe.currentText() == 'W / Si':
+        if self.window.dmm_stripe.currentText() == 'W/Si':
             self.window.dmm_2d.setValue(6.619)  # 2D-value in nm
             self.window.layer_pairs.setValue(70)
-        if self.window.dmm_stripe.currentText() == 'Mo / B4C':
+        if self.window.dmm_stripe.currentText() == 'Mo/B4C':
             self.window.dmm_2d.setValue(5.736)  # 2D-value in nm
             self.window.layer_pairs.setValue(180)
         if self.window.dmm_stripe.currentText() == 'Pd':
@@ -462,7 +462,7 @@ class Helper(QtCore.QObject):
             # 1 nm = 10 angstrom
             # rho == density in g * cm-3 at room temperature
 
-            if ml_system == 'Mo / B4C':
+            if ml_system == 'Mo/B4C':
                 mt = rm.Material(['B', 'C'], [4, 1], rho=2.52)  # top_layer
                 mb = rm.Material('Mo', rho=10.28)  # bottom_layer
                 ms = rm.Material('Si', rho=2.336)  # substrate
@@ -472,7 +472,7 @@ class Helper(QtCore.QObject):
                 ml = rm.Multilayer(mt, self.window.d_top_layer.value(), mb, self.window.d_bottom_layer.value(),
                                    self.window.layer_pairs.value(), ms)
 
-            elif ml_system == 'W / Si':
+            elif ml_system == 'W/Si':
                 mt = rm.Material('Si', rho=2.336)  # top_layer
                 mb = rm.Material('W', rho=19.25)  # bottom_layer
 
@@ -501,7 +501,7 @@ class Helper(QtCore.QObject):
                 self.window.d_filter1.blockSignals(True)
                 self.window.d_filter2.blockSignals(True)
 
-                if ml_system == 'W / Si':
+                if ml_system == 'W/Si':
                     if theta >= 1.1119:  # <= 10 keV
                         self.window.filter1.setCurrentIndex(0)
                         self.window.d_filter1.setValue(600.)
@@ -537,7 +537,7 @@ class Helper(QtCore.QObject):
                         self.window.d_filter1.setValue(600.)
                         self.window.filter2.setCurrentIndex(2)
                         self.window.d_filter2.setValue(1000.)
-                elif ml_system == 'Mo / B4C':
+                elif ml_system == 'Mo/B4C':
                     if theta >= 0.8386:  # <= 15 keV
                         self.window.filter1.setCurrentIndex(0)
                         self.window.d_filter1.setValue(600.)
@@ -685,7 +685,7 @@ class Helper(QtCore.QObject):
 
             # correction factor for EPICS-beamoffset
             dmm_corr = 1.036
-            if self.window.dmm_stripe.currentText() == 'Mo / B4C':
+            if self.window.dmm_stripe.currentText() == 'Mo/B4C':
                 dmm_corr = 1.023
 
             e_min = (hc_e * dmm_corr * 2 * z2_llm) / (self.window.dmm_2d.value() * self.window.dmm_off.value())
@@ -856,15 +856,12 @@ class Helper(QtCore.QObject):
             self.window.dmm_in.setChecked(0)
         else:
             # which stripe?
-            dmm_x = caget('OMS58:25003004.RBV')
-            if -27 < dmm_x < -12.5:
-                # Pd stripe
+            dmm_stripe = caget('OMS58:25003004_MnuAct.SVAL')
+            if dmm_stripe == 'Pd':
                 self.window.dmm_stripe.setCurrentIndex(2)
-            elif -12.5 <= dmm_x <= 12.5:
-                # W / Si stripe
+            elif dmm_stripe == 'W/Si':
                 self.window.dmm_stripe.setCurrentIndex(0)
-            elif 12.5 < dmm_x < 27:
-                # Mo / B4C stripe
+            elif dmm_stripe == 'Mo/B4C':
                 self.window.dmm_stripe.setCurrentIndex(1)
 
             # angle first mirror (set also the slider-position)
@@ -930,6 +927,7 @@ class Helper(QtCore.QObject):
         move_motor_list = {}
         bl_offset_diff = 0
         white_beam = False
+        wrong_pd_off_text = ''
         destination_text = 'Confirm following movements:\n'
 
         # the filters
@@ -956,24 +954,11 @@ class Helper(QtCore.QObject):
             dmm_stripe = self.window.dmm_stripe.currentText()
 
             # what DMM calculation is currently set?
-            dmm_band_epics = caget('Energ:25000007selectBand')
-            # the energy calculation in EPICS is either W/Si (dmm_band_epics=0) or Mo/B4C (dmm_band_epics=1), no Pd
-            if dmm_band_epics == 0:
-                dmm_band_epics = 'W / Si'
-            else:
-                dmm_band_epics = 'Mo / B4C'
-
-            if dmm_stripe != 'Pd':
-                # tell the user only if there is really a change of selectBand
-                if dmm_stripe != dmm_band_epics:
-                    destination_text = destination_text + '\nsetting EPICS calculation DMM-Stripe:\t %s --> %s' % \
-                                       (dmm_band_epics, dmm_stripe)
-
-                # but we need to process selectBand anyway to drive DMM-X
-                if dmm_stripe == 'W / Si':
-                    move_motor_list['Energ:25000007selectBand'] = 0.
-                else:
-                    move_motor_list['Energ:25000007selectBand'] = 1.
+            dmm_band_epics = caget('OMS58:25003004_MnuAct.SVAL')
+            if dmm_stripe != dmm_band_epics:
+                destination_text = destination_text + '\nsetting EPICS calculation DMM-Stripe:\t %s --> %s' % \
+                               (dmm_band_epics, dmm_stripe)
+                move_motor_list['OMS58:25003004_Mnu'] = dmm_stripe
 
             # what's with the offset?
             dmm_off = self.window.dmm_off.value()
@@ -983,12 +968,6 @@ class Helper(QtCore.QObject):
             if dmm_off != dmm_off_epics:
                 destination_text = destination_text + '\nsetting DMM-Offset:\t %.2f --> %.2f' % (dmm_off_epics, dmm_off)
                 move_motor_list['Energ:25000007y2.B'] = dmm_off
-
-            if dmm_stripe == 'Pd':
-                dmm_x = round(caget('OMS58:25003004.RBV'), 2)
-                if dmm_x != -23.:
-                    destination_text = destination_text + '\nmoving DMM-X:\t %.2f --> -23' % dmm_x
-                    move_motor_list['OMS58:25003004'] = -23.
 
             if self.window.goto_e_max.isChecked() and dmm_stripe != 'Pd' and not self.window.dcm_in.isChecked():
                 # forward energy_max to the EPICS-energy-record
@@ -1015,8 +994,8 @@ class Helper(QtCore.QObject):
 
                 if dmm_z2 > dmm_z2_hlm:
                     dmm_off_needed = round(dmm_z2_hlm * math.tan(math.radians(2 * dmm_theta)), 2)
-                    destination_text = 'The calculated DMM_Z2 = %.2f exceeds the High-Limit. You need a ' \
-                                       'DMM-Offset = %.2f or lower. Please recalculate!' % (dmm_z2, dmm_off_needed)
+                    wrong_pd_off_text = 'The calculated DMM_Z2 = %.2f exceeds the High-Limit. You need a ' \
+                                        'DMM-Offset = %.2f or lower. Please recalculate!' % (dmm_z2, dmm_off_needed)
 
                 if dmm_z2 != dmm_z2_epics:
                     destination_text = destination_text + '\nmoving DMM-Z_2:\t %.2f --> %.2f' % (dmm_z2_epics, dmm_z2)
@@ -1146,6 +1125,16 @@ class Helper(QtCore.QObject):
                 move_motor_list['OMS58:25004003'] = ct_table_new
             if self.window.off_custom.toPlainText():
                 print(self.window.off_custom.toPlainText())
+
+        # break if recalculation because of DMM-Offset is needed
+        if wrong_pd_off_text:
+            info_box = QtGui.QMessageBox()
+            info_box.setWindowTitle('Recalculate DMM-Offset.')
+            info_box.setIcon(QtGui.QMessageBox.Warning)
+            info_box.setStandardButtons(QtGui.QMessageBox.Ok)
+            info_box.setText(wrong_pd_off_text)
+            info_box.exec_()
+            return
 
         # show a message box to confirm movement
         msg_box = QtGui.QMessageBox()
