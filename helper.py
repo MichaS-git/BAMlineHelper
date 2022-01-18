@@ -15,6 +15,7 @@ from PySide2.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
 
 import xrt.backends.raycing.materials as rm
 import xrt.backends.raycing.sources as rs
+import xraydb
 
 import pyqtgraph as pg
 from epics import caget, caput, camonitor
@@ -164,6 +165,7 @@ class Helper(QtCore.QObject):
         self.window.filter2.currentIndexChanged.connect(self.set_filter_size)
         self.window.d_filter1.valueChanged.connect(self.bl_spectrum)
         self.window.d_filter2.valueChanged.connect(self.bl_spectrum)
+        self.window.plot_elements.stateChanged.connect(self.bl_spectrum)
 
         # user input to dmm parameters
         self.window.dmm_stripe.currentIndexChanged.connect(self.choose_dmm_stripe)
@@ -258,10 +260,10 @@ class Helper(QtCore.QObject):
         # gamma: ration of the high absorbing layer (in our case bottom) to the 2D-value
         self.window.dmm_gamma.setValue(0.4)
 
-        if self.window.dmm_stripe.currentText() == 'W / Si':
+        if self.window.dmm_stripe.currentText() == 'W/Si':
             self.window.dmm_2d.setValue(6.619)  # 2D-value in nm
             self.window.layer_pairs.setValue(70)
-        if self.window.dmm_stripe.currentText() == 'Mo / B4C':
+        if self.window.dmm_stripe.currentText() == 'Mo/B4C':
             self.window.dmm_2d.setValue(5.736)  # 2D-value in nm
             self.window.layer_pairs.setValue(180)
         if self.window.dmm_stripe.currentText() == 'Pd':
@@ -413,7 +415,7 @@ class Helper(QtCore.QObject):
         x_prime_max = self.window.hor_acceptance.value()
         z_prime_max = self.window.ver_acceptance.value()
 
-        theta = np.linspace(-1., 1., 51) * x_prime_max * 1e-3
+        theta = np.linspace(-1.5, 1.5, 20) * x_prime_max * 1e-3
         psi = np.linspace(-1., 1., 51) * z_prime_max * 1e-3
         dtheta, dpsi = theta[1] - theta[0], psi[1] - psi[0]
 
@@ -444,7 +446,7 @@ class Helper(QtCore.QObject):
 
     def bl_spectrum(self):
 
-        # without a source-spectrum the energy_array comes "def energy_range", otherwise from "def xrt_source_wls"
+        # without a source-spectrum the energy_array comes from "def energy_range", otherwise from "def xrt_source_wls"
         if self.window.source_in.isChecked() is False:
             energy_array = self.energy
         else:
@@ -460,7 +462,7 @@ class Helper(QtCore.QObject):
             # 1 nm = 10 angstrom
             # rho == density in g * cm-3 at room temperature
 
-            if ml_system == 'Mo / B4C':
+            if ml_system == 'Mo/B4C':
                 mt = rm.Material(['B', 'C'], [4, 1], rho=2.52)  # top_layer
                 mb = rm.Material('Mo', rho=10.28)  # bottom_layer
                 ms = rm.Material('Si', rho=2.336)  # substrate
@@ -470,7 +472,7 @@ class Helper(QtCore.QObject):
                 ml = rm.Multilayer(mt, self.window.d_top_layer.value(), mb, self.window.d_bottom_layer.value(),
                                    self.window.layer_pairs.value(), ms)
 
-            elif ml_system == 'W / Si':
+            elif ml_system == 'W/Si':
                 mt = rm.Material('Si', rho=2.336)  # top_layer
                 mb = rm.Material('W', rho=19.25)  # bottom_layer
 
@@ -499,7 +501,7 @@ class Helper(QtCore.QObject):
                 self.window.d_filter1.blockSignals(True)
                 self.window.d_filter2.blockSignals(True)
 
-                if ml_system == 'W / Si':
+                if ml_system == 'W/Si':
                     if theta >= 1.1119:  # <= 10 keV
                         self.window.filter1.setCurrentIndex(0)
                         self.window.d_filter1.setValue(600.)
@@ -535,7 +537,7 @@ class Helper(QtCore.QObject):
                         self.window.d_filter1.setValue(600.)
                         self.window.filter2.setCurrentIndex(2)
                         self.window.d_filter2.setValue(1000.)
-                elif ml_system == 'Mo / B4C':
+                elif ml_system == 'Mo/B4C':
                     if theta >= 0.8386:  # <= 15 keV
                         self.window.filter1.setCurrentIndex(0)
                         self.window.d_filter1.setValue(600.)
@@ -683,7 +685,7 @@ class Helper(QtCore.QObject):
 
             # correction factor for EPICS-beamoffset
             dmm_corr = 1.036
-            if self.window.dmm_stripe.currentText() == 'Mo / B4C':
+            if self.window.dmm_stripe.currentText() == 'Mo/B4C':
                 dmm_corr = 1.023
 
             e_min = (hc_e * dmm_corr * 2 * z2_llm) / (self.window.dmm_2d.value() * self.window.dmm_off.value())
@@ -776,6 +778,43 @@ class Helper(QtCore.QObject):
             dcm_emin_line.setPos([e_min, e_min])
             dcm_emax_line.setPos([e_max, e_max])
 
+        # plot element edges from the xray-database, syntax is: Cu [K L1] + Fe [K] + Al
+        if self.window.plot_elements.isChecked() and self.window.elements.toPlainText():
+            text = self.window.elements.toPlainText()
+
+            # separate the elements
+            elements = text.split('+')
+
+            # go through the elements and separate the edges
+            label_pos = 1.
+            for element in elements:
+                # if no edges given, show all edges within the chosen energy-range
+                if '[' not in element:
+                    all_edges = xraydb.xray_edges(element.strip())
+                    for edge in all_edges:
+                        energy = float(all_edges[edge].energy) / 1000.
+                        if self.window.e_min.value() > energy or energy > self.window.e_max.value():
+                            break
+                        label = element + ' ' + edge + ' ' + str(energy)
+                        label_pos -= 0.025
+                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen=(255, 0, 0, 255), label=label,
+                                                    labelOpts={'position': label_pos, 'color': 'b',
+                                                               'fill': (200, 200, 200, 50), 'movable': True})
+                        self.window.Graph.addItem(edge_line)
+                        edge_line.setPos([energy, energy])
+                else:
+                    edges = element[element.find("[")+1:element.find("]")].split(',')
+                    element = element.rsplit()[0]
+                    for edge in edges:
+                        energy = xraydb.xray_edge(element, edge.strip(), energy_only=True) / 1000.
+                        label = element + ' ' + edge + ' ' + str(energy)
+                        label_pos -= 0.025
+                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen=(255, 0, 0, 255), label=label,
+                                                    labelOpts={'position': label_pos, 'color': 'b',
+                                                               'fill': (200, 200, 200, 50), 'movable': True})
+                        self.window.Graph.addItem(edge_line)
+                        edge_line.setPos([energy, energy])
+
     def bl_status(self):
 
         """Get the current motor values and put them to the calculator. Only at BAMline."""
@@ -817,15 +856,12 @@ class Helper(QtCore.QObject):
             self.window.dmm_in.setChecked(0)
         else:
             # which stripe?
-            dmm_x = caget('OMS58:25003004.RBV')
-            if -27 < dmm_x < -12.5:
-                # Pd stripe
+            dmm_stripe = caget('OMS58:25003004_MnuAct.SVAL')
+            if dmm_stripe == 'Pd':
                 self.window.dmm_stripe.setCurrentIndex(2)
-            elif -12.5 <= dmm_x <= 12.5:
-                # W / Si stripe
+            elif dmm_stripe == 'W/Si':
                 self.window.dmm_stripe.setCurrentIndex(0)
-            elif 12.5 < dmm_x < 27:
-                # Mo / B4C stripe
+            elif dmm_stripe == 'Mo/B4C':
                 self.window.dmm_stripe.setCurrentIndex(1)
 
             # angle first mirror (set also the slider-position)
@@ -891,6 +927,7 @@ class Helper(QtCore.QObject):
         move_motor_list = {}
         bl_offset_diff = 0
         white_beam = False
+        wrong_pd_off_text = ''
         destination_text = 'Confirm following movements:\n'
 
         # the filters
@@ -917,24 +954,11 @@ class Helper(QtCore.QObject):
             dmm_stripe = self.window.dmm_stripe.currentText()
 
             # what DMM calculation is currently set?
-            dmm_band_epics = caget('Energ:25000007selectBand')
-            # the energy calculation in EPICS is either W/Si (dmm_band_epics=0) or Mo/B4C (dmm_band_epics=1), no Pd
-            if dmm_band_epics == 0:
-                dmm_band_epics = 'W / Si'
-            else:
-                dmm_band_epics = 'Mo / B4C'
-
-            if dmm_stripe != 'Pd':
-                # tell the user only if there is really a change of selectBand
-                if dmm_stripe != dmm_band_epics:
-                    destination_text = destination_text + '\nsetting EPICS calculation DMM-Stripe:\t %s --> %s' % \
-                                       (dmm_band_epics, dmm_stripe)
-
-                # but we need to process selectBand anyway to drive DMM-X
-                if dmm_stripe == 'W / Si':
-                    move_motor_list['Energ:25000007selectBand'] = 0.
-                else:
-                    move_motor_list['Energ:25000007selectBand'] = 1.
+            dmm_band_epics = caget('OMS58:25003004_MnuAct.SVAL')
+            if dmm_stripe != dmm_band_epics:
+                destination_text = destination_text + '\nsetting EPICS calculation DMM-Stripe:\t %s --> %s' % \
+                               (dmm_band_epics, dmm_stripe)
+                move_motor_list['OMS58:25003004_Mnu'] = dmm_stripe
 
             # what's with the offset?
             dmm_off = self.window.dmm_off.value()
@@ -944,12 +968,6 @@ class Helper(QtCore.QObject):
             if dmm_off != dmm_off_epics:
                 destination_text = destination_text + '\nsetting DMM-Offset:\t %.2f --> %.2f' % (dmm_off_epics, dmm_off)
                 move_motor_list['Energ:25000007y2.B'] = dmm_off
-
-            if dmm_stripe == 'Pd':
-                dmm_x = round(caget('OMS58:25003004.RBV'), 2)
-                if dmm_x != -23.:
-                    destination_text = destination_text + '\nmoving DMM-X:\t %.2f --> -23' % dmm_x
-                    move_motor_list['OMS58:25003004'] = -23.
 
             if self.window.goto_e_max.isChecked() and dmm_stripe != 'Pd' and not self.window.dcm_in.isChecked():
                 # forward energy_max to the EPICS-energy-record
@@ -976,8 +994,8 @@ class Helper(QtCore.QObject):
 
                 if dmm_z2 > dmm_z2_hlm:
                     dmm_off_needed = round(dmm_z2_hlm * math.tan(math.radians(2 * dmm_theta)), 2)
-                    destination_text = 'The calculated DMM_Z2 = %.2f exceeds the High-Limit. You need a ' \
-                                       'DMM-Offset = %.2f or lower. Please recalculate!' % (dmm_z2, dmm_off_needed)
+                    wrong_pd_off_text = 'The calculated DMM_Z2 = %.2f exceeds the High-Limit. You need a ' \
+                                        'DMM-Offset = %.2f or lower. Please recalculate!' % (dmm_z2, dmm_off_needed)
 
                 if dmm_z2 != dmm_z2_epics:
                     destination_text = destination_text + '\nmoving DMM-Z_2:\t %.2f --> %.2f' % (dmm_z2_epics, dmm_z2)
@@ -1107,6 +1125,16 @@ class Helper(QtCore.QObject):
                 move_motor_list['OMS58:25004003'] = ct_table_new
             if self.window.off_custom.toPlainText():
                 print(self.window.off_custom.toPlainText())
+
+        # break if recalculation because of DMM-Offset is needed
+        if wrong_pd_off_text:
+            info_box = QtGui.QMessageBox()
+            info_box.setWindowTitle('Recalculate DMM-Offset.')
+            info_box.setIcon(QtGui.QMessageBox.Warning)
+            info_box.setStandardButtons(QtGui.QMessageBox.Ok)
+            info_box.setText(wrong_pd_off_text)
+            info_box.exec_()
+            return
 
         # show a message box to confirm movement
         msg_box = QtGui.QMessageBox()
