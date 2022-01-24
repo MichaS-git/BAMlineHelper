@@ -6,6 +6,7 @@ import sys
 import math
 import numpy as np
 import time
+import glob
 
 import helper_calc as calc
 import evefile as ef                  # only at BAMline
@@ -200,7 +201,12 @@ class Helper(QtCore.QObject):
         self.window.off_expTable.toggled.connect(self.toggle_ctTable_off)
 
         # load h5-File parameters
-        self.window.actionLoad_h5.triggered.connect(self.load_h5)
+        self.window.actionLoad_h5.triggered.connect(self.load_path)
+        self.window.pathLine.textChanged.connect(self.load_h5)
+        self.window.h5_first.clicked.connect(self.h5_navigate)
+        self.window.h5_prev.clicked.connect(lambda: self.h5_navigate(direction=1))
+        self.window.h5_next.clicked.connect(lambda: self.h5_navigate(direction=2))
+        self.window.h5_last.clicked.connect(lambda: self.h5_navigate(direction=3))
 
     def view_box(self):
 
@@ -487,7 +493,7 @@ class Helper(QtCore.QObject):
             theta = self.window.dmm_theta.value()
             dmm_spol, dmm_ppol = ml.get_amplitude(energy_array, math.sin(math.radians(theta)))[0:2]
 
-            # calculate reflection of only one mirror (not 100% sure if that is correct...)
+            # calculate reflection of only one mirror
             if self.window.dmm_one_ml.isChecked():
                 spectrum_dmm = abs(dmm_spol) ** 2
             else:
@@ -585,7 +591,7 @@ class Helper(QtCore.QObject):
                 crystal = rm.CrystalSi(hkl=hkl_ebene)
                 dcm_spol, dcm_ppol = crystal.get_amplitude(energy_array,
                                                            math.sin(math.radians(self.window.dcm_theta.value())))
-                # calculate reflection of only one crystal (not 100% sure if that is correct...)
+                # calculate reflection of only one crystal
                 if self.window.dcm_one_crystal.isChecked() is True:
                     spectrum_dcm = spectrum_dcm + abs(dcm_spol) ** 2
                 else:
@@ -819,6 +825,9 @@ class Helper(QtCore.QObject):
 
         """Get the current motor values and put them to the calculator. Only at BAMline."""
 
+        # turn off all signal-events
+        self.block_signals_to_bl_spectrum(block=True)
+
         # the source, get the ring current and the magnetic field; if PVs are not accessible, use default values
         ring_current = caget('bIICurrent:Mnt1')
         if not ring_current:
@@ -908,6 +917,12 @@ class Helper(QtCore.QObject):
 
             self.window.dcm_in.setChecked(1)
 
+        # turn on all signal-events
+        self.block_signals_to_bl_spectrum(block=False)
+
+        # calculate and plot the new spectrum
+        self.bl_spectrum()
+
     def toggle_expTable_off(self):
 
         """Only EXP_TISCH or CT-Table_Y can be checked."""
@@ -923,6 +938,44 @@ class Helper(QtCore.QObject):
         self.window.off_ctTable.blockSignals(True)
         self.window.off_ctTable.setChecked(False)
         self.window.off_ctTable.blockSignals(False)
+
+    def block_signals_to_bl_spectrum(self, block):
+
+        """Turn OFF or ON the signals of all the GUI objects that execute bl_spectrum when user-input happens.
+        :param block True = block signals
+        :param block False = send signals"""
+
+        # perform calculations when there was user input
+        self.window.calc_fwhm.blockSignals(block)
+        self.window.fwhm.blockSignals(block)
+        self.window.line_button.blockSignals(block)
+
+        # change global Energy-Range
+        self.window.source_in.blockSignals(block)
+
+        # user input to filter parameters
+        self.window.d_filter1.blockSignals(block)
+        self.window.d_filter2.blockSignals(block)
+        self.window.plot_elements.blockSignals(block)
+
+        # user input to dmm parameters
+        self.window.layer_pairs.blockSignals(block)
+        self.window.dmm_off.blockSignals(block)
+        self.window.dmm_theta.blockSignals(block)
+        self.window.d_top_layer.blockSignals(block)
+        self.window.dmm_one_ml.blockSignals(block)
+        self.window.dmm_in.blockSignals(block)
+        self.window.dmm_off_check.blockSignals(block)
+        self.window.dmm_with_filters.blockSignals(block)
+
+        # user input to dcm parameters
+        self.window.dcm_in.blockSignals(block)
+        self.window.dcm_one_crystal.blockSignals(block)
+        self.window.dcm_off_check.blockSignals(block)
+        self.window.dcm_orientation.blockSignals(block)
+        self.window.dcm_theta.blockSignals(block)
+        self.window.dcm_off.blockSignals(block)
+        self.window.dcm_harmonics.blockSignals(block)
 
     def bl_move(self):
 
@@ -1173,38 +1226,164 @@ class Helper(QtCore.QObject):
                         info_box.exec_()
                         return
                 for i in move_motor_list:
-                    caput(i, move_motor_list[i])
+                    #caput(i, move_motor_list[i])
                     # wait a bit because it is not good to send requests in such high frequency to the VME-IOC
                     time.sleep(0.1)
-                    #print("caput(%s, %s)" % (i, move_motor_list[i]))
+                    print("caput(%s, %s)" % (i, move_motor_list[i]))
                 return
             # anything else than OK
             return
 
+    def load_path(self):
+
+        directory = '/messung/'
+
+        fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open File', directory, '*.h5')
+
+        fname = fname[0]
+
+        if not fname:
+            return
+
+        self.window.pathLine.setText('%s' % fname)
+
+    def h5_navigate(self, direction=0):
+
+        fname = self.window.pathLine.text()
+
+        if not fname:
+            return
+
+        if fname.find('.h5') == -1:
+            return
+
+        number = int(fname[-8:-3])
+        new_number = '00001'
+
+        if direction == 1:  # prev
+
+            if number <= 1:
+                return
+            new_number = str(number - 1).zfill(5)
+
+        if direction == 2:  # next
+
+            new_number = str(number + 1).zfill(5)
+            directory = fname[:-8]
+            counter = len(glob.glob1(directory, '*.h5'))
+            if int(new_number) > counter:
+                return
+
+        if direction == 3:  # last
+
+            directory = fname[:-8]
+            counter = len(glob.glob1(directory, '*.h5'))
+            new_number = str(counter).zfill(5)
+            # self.window.pathLine.setText('')
+
+        new_fname = fname.replace(str(number).zfill(5), new_number)
+
+        self.window.pathLine.setText('%s' % new_fname)
+
     def load_h5(self):
 
-        """Loads a h5-File using evefile package form PTB."""
+        """Loads a h5-File using evefile package from PTB and set the beamline status."""
 
-        path = '/messung/'
-        path = QtWidgets.QFileDialog.getOpenFileName(None, 'Open File', path, '*.h5')
-        if path == '':
-            return
-        self.window.pathLine.setText(path[0])
+        path = self.window.pathLine.text()
 
-        if not os.path.isfile(path[0]):
+        if not path:
             return
+        if os.path.isfile(path) is False:
+            return
+
+        # turn off all signal-events
+        self.block_signals_to_bl_spectrum(block=True)
 
         # this list contains the necessary motor-names to load the beamline status into BAMline-helper
-        motor_list = ['FILTER_1_disc', 'FILTER_2_disc', 'DMM_THETA_1', 'DMM_Y_2', 'DMM_X']
+        motor_list = ['FILTER_1_disc', 'FILTER_2_disc', 'DMM_Stripe', 'DMM_THETA_1', 'DMM_Y_2', 'DCM_THETA', 'DCM_Z_2']
 
-        efile = ef.EveFile(path[0])
+        # load the h5-file with eveFile
+        efile = ef.EveFile(path)
+
+        # get the Scan-Start-Time first
+        fmd = efile.get_file_metadata()
+        self.window.h5_start_time.setText(fmd.getStartTime())
+
+        # first: look up which monochromator(s) were in use
+        mdl = efile.get_metadata(ef.Section.Snapshot, name='DMM_Y_1')
+        elem = efile.get_data(mdl[0])
+        dmm_y_1_pos = elem.iloc[0][0]
+        if dmm_y_1_pos > -1:
+            self.window.dmm_in.setChecked(1)
+        else:
+            self.window.dmm_in.setChecked(0)
+
+        mdl = efile.get_metadata(ef.Section.Snapshot, name='DCM_Y')
+        elem = efile.get_data(mdl[0])
+        dcm_y_pos = elem.iloc[0][0]
+        if dcm_y_pos > -1:
+            self.window.dcm_in.setChecked(1)
+        else:
+            self.window.dcm_in.setChecked(0)
+
+        # for older h5-files that did not contain the pseudo-motor 'DMM_Stripe', we need to look at DMM_X when
+        # 'DMM_Stripe' was not found
+        dmm_stripe_pseudo_found = False
+
+        # now loop through the meta-data and set the proper positions/settings
         mdl = efile.get_metadata(ef.Section.Snapshot)
         for md in mdl:
             elem = efile.get_data(md)
             column_name = elem.columns.tolist()
-            position = elem.iloc[0][0]  # <class 'numpy.float64'>
-            #print(type(column_name[0]))  # <class 'str'>
-            print("%s: at position %s\n" % (column_name[0], position))
+            # print(type(column_name[0]))  # <class 'str'>
+            if column_name[0] in motor_list:
+                position = elem.iloc[0][0]
+                # print("%s: at position %s\n" % (column_name[0], position))
+                if column_name[0] == 'FILTER_1_disc':
+                    index = self.window.filter1.findText(position, QtCore.Qt.MatchFixedString)
+                    if index >= 0:
+                        self.window.filter1.setCurrentIndex(index)
+                if column_name[0] == 'FILTER_2_disc':
+                    index = self.window.filter2.findText(position, QtCore.Qt.MatchFixedString)
+                    if index >= 0:
+                        self.window.filter2.setCurrentIndex(index)
+                if dmm_y_1_pos > -1:
+                    if column_name[0] == 'DMM_Stripe':
+                        dmm_stripe_pseudo_found = True
+                        index = self.window.dmm_stripe.findText(position, QtCore.Qt.MatchFixedString)
+                        if index >= 0:
+                            self.window.dmm_stripe.setCurrentIndex(index)
+                    if column_name[0] == 'DMM_THETA_1':
+                        self.window.dmm_theta.setValue(position)
+                    if column_name[0] == 'DMM_Y_2':
+                        self.window.dmm_off.setValue(position)
+                if dcm_y_pos > -1:
+                    if column_name[0] == 'DCM_THETA':
+                        self.window.dcm_theta.setValue(position)
+                    if column_name[0] == 'DCM_Z_2':
+                        dcm_z_2 = position
+                        mdl = efile.get_metadata(ef.Section.Snapshot, name='DCM_THETA')
+                        elem = efile.get_data(mdl[0])
+                        dcm_theta = elem.iloc[0][0]
+                        dcm_offset = dcm_z_2 * 2 * math.sin(dcm_theta)
+                        self.window.dcm_off.setValue(dcm_offset)
+
+        if dmm_y_1_pos > -1 and not dmm_stripe_pseudo_found:
+            mdl = efile.get_metadata(ef.Section.Snapshot, name='DMM_X')
+            elem = efile.get_data(mdl[0])
+            position = elem.iloc[0][0]
+            if -25 < position < -12.5:
+                self.window.dmm_stripe.setCurrentIndex(2)
+            if -12.5 < position < 12.5:
+                self.window.dmm_stripe.setCurrentIndex(0)
+            if 12.5 < position < 25:
+                self.window.dmm_stripe.setCurrentIndex(1)
+
+        # turn on all signal-events
+        self.block_signals_to_bl_spectrum(block=False)
+
+        # calculate and plot the new spectrum
+        self.bl_spectrum()
 
 
 if __name__ == '__main__':
