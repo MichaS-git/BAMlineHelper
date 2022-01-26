@@ -1226,10 +1226,10 @@ class Helper(QtCore.QObject):
                         info_box.exec_()
                         return
                 for i in move_motor_list:
-                    #caput(i, move_motor_list[i])
+                    caput(i, move_motor_list[i])
                     # wait a bit because it is not good to send requests in such high frequency to the VME-IOC
                     time.sleep(0.1)
-                    print("caput(%s, %s)" % (i, move_motor_list[i]))
+                    #print("caput(%s, %s)" % (i, move_motor_list[i]))
                 return
             # anything else than OK
             return
@@ -1257,31 +1257,48 @@ class Helper(QtCore.QObject):
         if fname.find('.h5') == -1:
             return
 
-        number = int(fname[-8:-3])
-        new_number = '00001'
+        # get the h5-Filename
+        h5_file_name = fname.split('/')[-1]
+
+        # get the Filename
+        file_name = h5_file_name.split('.')[0]
+
+        orig_str_number = ''
+        # loop through the Filename from back until first char
+        for c in reversed(file_name):
+            if c.isnumeric():
+                orig_str_number += c
+            else:
+                break
+
+        orig_str_number = orig_str_number[::-1]
+        str_number_length = len(orig_str_number)
+        # create number 1 .h5-File if the button h5-first was clicked
+        new_number = '1'.zfill(str_number_length)
+        orig_number = int(orig_str_number)
 
         if direction == 1:  # prev
 
-            if number <= 1:
+            if orig_number <= 1:
                 return
-            new_number = str(number - 1).zfill(5)
+            new_number = str(orig_number - 1).zfill(str_number_length)
 
         if direction == 2:  # next
 
-            new_number = str(number + 1).zfill(5)
-            directory = fname[:-8]
+            new_number = str(orig_number + 1).zfill(str_number_length)
+            directory = fname.replace(h5_file_name, '')
             counter = len(glob.glob1(directory, '*.h5'))
             if int(new_number) > counter:
                 return
 
         if direction == 3:  # last
 
-            directory = fname[:-8]
+            directory = fname.replace(h5_file_name, '')
             counter = len(glob.glob1(directory, '*.h5'))
-            new_number = str(counter).zfill(5)
+            new_number = str(counter).zfill(str_number_length)
             # self.window.pathLine.setText('')
 
-        new_fname = fname.replace(str(number).zfill(5), new_number)
+        new_fname = fname.replace(str(orig_str_number).zfill(str_number_length), new_number)
 
         self.window.pathLine.setText('%s' % new_fname)
 
