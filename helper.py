@@ -1382,7 +1382,7 @@ class Helper(QtCore.QObject):
                         mdl = efile.get_metadata(ef.Section.Snapshot, name='DCM_THETA')
                         elem = efile.get_data(mdl[0])
                         dcm_theta = elem.iloc[0][0]
-                        dcm_offset = dcm_z_2 * 2 * math.sin(dcm_theta)
+                        dcm_offset = dcm_z_2 * 2 * math.sin(math.radians(dcm_theta))
                         self.window.dcm_off.setValue(dcm_offset)
 
         if dmm_y_1_pos > -1 and not dmm_stripe_pseudo_found:
