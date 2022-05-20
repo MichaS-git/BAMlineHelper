@@ -5,12 +5,11 @@ import os
 import sys
 import math
 import numpy as np
+import time
 import glob
-import re
 
 import helper_calc as calc
-import device_selection
-import evefile as ef  # only at BAMline
+import evefile as ef                  # only at BAMline
 
 from PySide2 import QtWidgets, QtUiTools, QtCore, QtGui
 from PySide2.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
@@ -20,7 +19,7 @@ import xrt.backends.raycing.sources as rs
 import xraydb
 
 import pyqtgraph as pg
-from epics import caget
+from epics import caget, caput, camonitor
 
 pg.setConfigOption('background', 'w')  # background color white (2D)
 pg.setConfigOption('foreground', 'k')  # foreground color black (2D)
@@ -130,11 +129,6 @@ class Helper(QtCore.QObject):
         self.flux_xrt_wls = []  # empty flux array at startup
         self.energy_max = 1  # Maximum Energy of the spectrum in keV, determined in spectrum_evaluation
 
-        # load PVs from xsubst-File
-        # dictionary with the beamline device-names and their corresponding PVs (see func.: initialize_pvs)
-        self.bl_pvs = {}
-        self.initialize_pvs()
-
         self.threadpool = QThreadPool()
         # print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
@@ -202,12 +196,11 @@ class Helper(QtCore.QObject):
 
         # status and GoTo parameters
         self.window.get_pos.clicked.connect(self.bl_status)
-        self.window.action_button.clicked.connect(self.choose_move)
+        self.window.action_button.clicked.connect(self.bl_move)
         self.window.off_ctTable.toggled.connect(self.toggle_expTable_off)
         self.window.off_expTable.toggled.connect(self.toggle_ctTable_off)
 
         # load h5-File parameters
-        self.efile = False
         self.window.actionLoad_h5.triggered.connect(self.load_path)
         self.window.pathLine.textChanged.connect(self.load_h5)
         self.window.h5_first.clicked.connect(self.h5_navigate)
@@ -586,9 +579,9 @@ class Helper(QtCore.QObject):
         spectrum_dcm = 1
         if self.window.dcm_in.isChecked():
             hkl_orientation = (1, 1, 1)
-            if self.window.dcm_orientation.currentText() == 'Si 311':
+            if self.window.dcm_orientation.currentText() == '311':
                 hkl_orientation = (3, 1, 1)
-            elif self.window.dcm_orientation.currentText() == 'Si 333':
+            elif self.window.dcm_orientation.currentText() == '333':
                 hkl_orientation = (3, 3, 3)
 
             # hkl harmonics
@@ -769,7 +762,7 @@ class Helper(QtCore.QObject):
             else:
                 theta_max = theta_hlm
 
-            if self.window.dcm_orientation.currentText() == 'Si 111':
+            if self.window.dcm_orientation.currentText() == '111':
                 d_spacing = 0.6271202  # 2d/nm
             else:
                 d_spacing = 0.3275029  # 2d/nm
@@ -816,7 +809,7 @@ class Helper(QtCore.QObject):
                         self.window.Graph.addItem(edge_line)
                         edge_line.setPos([energy, energy])
                 else:
-                    edges = element[element.find("[") + 1:element.find("]")].split(',')
+                    edges = element[element.find("[")+1:element.find("]")].split(',')
                     element = element.rsplit()[0]
                     for edge in edges:
                         energy = xraydb.xray_edge(element, edge.strip(), energy_only=True) / 1000.
@@ -830,64 +823,95 @@ class Helper(QtCore.QObject):
 
     def bl_status(self):
 
-        """Get the current motor values and put them to the calculator. Only at BAMline (EPICS environment)."""
+        """Get the current motor values and put them to the calculator. Only at BAMline."""
 
         # turn off all signal-events
         self.block_signals_to_bl_spectrum(block=True)
 
         # the source, get the ring current and the magnetic field; if PVs are not accessible, use default values
-        ring_current = caget(self.bl_pvs['Bessy_Ringstrom']['PV'])
+        ring_current = caget('bIICurrent:Mnt1')
         if not ring_current:
             ring_current = 300.
         self.window.ring_current.setValue(ring_current)
-        magnetic_field = caget(self.bl_pvs['MagneticFluxDensity']['PV'])
+        magnetic_field = caget('W7IT1R:rdbk')
         if not magnetic_field:
             magnetic_field = 7.
         self.window.magnetic_field.setValue(magnetic_field)
 
         # the filters
-        self.window.filter1.setCurrentText(caget(self.bl_pvs['FILTER_1_disc']['PV'], as_string=True))
-        self.window.filter2.setCurrentText(caget(self.bl_pvs['FILTER_2_disc']['PV'], as_string=True))
+        filter_1 = caget('OMS58:25000004_MnuAct.SVAL')
+        filter_2 = caget('OMS58:25000005_MnuAct.SVAL')
+
+        if filter_1 == '600um Be':
+            self.window.filter1.setCurrentIndex(0)
+        elif filter_1 == '200um Cu':
+            self.window.filter1.setCurrentIndex(1)
+        elif filter_1 == '200um Al':
+            self.window.filter1.setCurrentIndex(2)
+        elif filter_1 == '1mm Al':
+            self.window.filter1.setCurrentIndex(3)
+        elif filter_1 == 'none':
+            self.window.filter1.setCurrentIndex(4)
+
+        if filter_2 == '200um Be':
+            self.window.filter2.setCurrentIndex(0)
+        elif filter_2 == '50um Cu':
+            self.window.filter2.setCurrentIndex(1)
+        elif filter_2 == '1mm Cu':
+            self.window.filter2.setCurrentIndex(2)
+        elif filter_2 == '500um Al':
+            self.window.filter2.setCurrentIndex(3)
+        elif filter_2 == '60um Al':
+            self.window.filter2.setCurrentIndex(4)
 
         # DMM
         # if dmm_y1 < -1mm: the DMM is out
-        if round(caget(self.bl_pvs['DMM_Y_1']['PV']), 2) < -1:
+        dmm_y1 = caget('OMS58:25001000.RBV')
+        if dmm_y1 < -1:
             self.window.dmm_in.setChecked(0)
         else:
             # which stripe?
-            self.window.dmm_stripe.setCurrentText(caget(self.bl_pvs['DMM_X_disc']['PV'], as_string=True))
+            dmm_stripe = caget('OMS58:25003004_MnuAct.SVAL')
+            if dmm_stripe == 'Pd':
+                self.window.dmm_stripe.setCurrentIndex(2)
+            elif dmm_stripe == 'W/Si':
+                self.window.dmm_stripe.setCurrentIndex(0)
+            elif dmm_stripe == 'Mo/B4C':
+                self.window.dmm_stripe.setCurrentIndex(1)
 
             # angle first mirror (set also the slider-position)
-            dmm_theta_1 = round(caget(self.bl_pvs['DMM_THETA_1']['PV']), 4)
+            dmm_theta_1 = caget('OMS58:25000007.RBV')
             self.window.dmm_slider_theta.setValue(dmm_theta_1 * 1e4)
             self.window.dmm_theta.setValue(dmm_theta_1)
             # dmm offset
-            dmm_offset = round(caget(self.bl_pvs['dmmBeamOffset']['PV']), 2)
+            dmm_offset = caget('Energ:25000007y2.B')
             self.window.dmm_slider_off.setValue(dmm_offset * 1e2)
             self.window.dmm_off.setValue(dmm_offset)
-
-            # autoselect filters on?
-            if caget(self.bl_pvs['DMM_Filter_Mode']['PV'], as_string=True) == 'Energy only':
-                self.window.dmm_with_filters.setChecked(0)
-            else:
-                self.window.dmm_with_filters.setChecked(1)
 
             self.window.dmm_in.setChecked(1)
 
         # DCM
         # if dcm_y < -1mm and dcm_theta < 1: the DCM is out
-        dcm_theta = round(caget(self.bl_pvs['DCM_THETA']['PV']), 4)
-        if round(caget(self.bl_pvs['DCM_Y']['PV']), 2) < -1. and dcm_theta < 1.:
+        dcm_y = caget('OMS58:25001007.RBV')
+        dcm_theta = caget('OMS58:25002000.RBV')
+
+        if dcm_y < -1. and dcm_theta < 1.:
             self.window.dcm_in.setChecked(0)
         else:
-            self.window.dcm_orientation.setCurrentText(caget(self.bl_pvs['dcmCrystalOrientation']['PV'],
-                                                             as_string=True))
+            crystal = caget('Energ:25002000selectCrystal')
+            # which crystal orientation?
+            if crystal == 0:
+                self.window.dcm_orientation.setCurrentIndex(0)
+            elif crystal == 1:
+                self.window.dcm_orientation.setCurrentIndex(1)
+            elif crystal == 1:
+                self.window.dcm_orientation.setCurrentIndex(2)
 
             # crystal angle (set also the slider-position)
             self.window.dcm_slider_theta.setValue(dcm_theta * 1e4)
             self.window.dcm_theta.setValue(dcm_theta)
             # dcm offset
-            dcm_offset = round(caget(self.bl_pvs['dcmBeamOffset']['PV']), 2)
+            dcm_offset = caget('Energ:25002000z2.B')
             self.window.dcm_slider_off.setValue(dcm_offset * 1e2)
             self.window.dcm_off.setValue(dcm_offset)
 
@@ -953,222 +977,264 @@ class Helper(QtCore.QObject):
         self.window.dcm_off.blockSignals(block)
         self.window.dcm_harmonics.blockSignals(block)
 
-    def initialize_pvs(self):
+    def bl_move(self):
 
-        """Load all the motor-names and motor-pv's from the bamline_main.xsubst file (only available at BAMline)."""
+        """Move the BL motors to the desired calculator positions."""
 
-        xsubsts = '/messung/eve/xml/xsubst/bamline_main.xsubst', '/messung/rfa/rfa.xsubst', '/messung/ct/ct.xsubst'\
-            , '/messung/eve/xml/xsubst/ringstrom.xsubst', '/messung/eve/xml/xsubst/bamline_topo.xsubst'
+        bl_offset = 0
+        dmm_off = 0
+        move_motor_list = {}
+        bl_offset_diff = 0
+        white_beam = False
+        wrong_pd_off_text = ''
+        destination_text = 'Confirm following movements:\n'
 
-        for xsubst in xsubsts:
-            with open(xsubst) as f:
-                content = f.read().splitlines()
+        # the filters
+        filter1 = self.window.filter1.currentText()
+        filter2 = self.window.filter2.currentText()
+        filter1_epics = caget('OMS58:25000004_MnuAct.SVAL')
+        filter2_epics = caget('OMS58:25000005_MnuAct.SVAL')
+        if filter1 != filter1_epics:
+            destination_text = destination_text + '\nmoving Filter 1:\t %s --> %s' % (filter1_epics, filter1)
+            move_motor_list['OMS58:25000004_Mnu'] = filter1
+        if filter2 != filter2_epics:
+            destination_text = destination_text + '\nmoving Filter 2:\t %s --> %s' % (filter2_epics, filter2)
+            move_motor_list['OMS58:25000005_Mnu'] = filter2
 
-            for i in content:
-                # do not implement outcommented devices
-                if i.startswith('#'):
-                    continue
-                # we do not need the slit motors, we use their combination: slots
-                if 'Class="Slits"' in i:
-                    continue
-                pv = re.search('PV="(.+?)"', i)
-                name = re.search('Name="(.+?)"', i)
+        if self.window.dmm_in.isChecked():
 
-                # if it is a dicrete-position motor, take out the nominal motor. we assume, that the nominal motor is
-                # already present in bl_pvs (nominal motors come first in the xsubst-files)
-                if '_disc' in i:
-                    self.bl_pvs.pop(name.group(1).replace('_disc', ''), None)
+            # if the DMM is out, drive it in (DMM_Y_1 -> 0)
+            dmm_y1 = round(caget('OMS58:25001000.RBV'), 2)
+            if dmm_y1 < -1.:
+                destination_text = destination_text + '\nmoving DMM-Y_1:\t %.2f --> 0' % dmm_y1
+                move_motor_list['OMS58:25001000'] = 0
 
-                if pv and name:
-                    # if its a discretePosition Motor '_Mnu' is added to the PV
-                    if 'discPos3-14' in i:
-                        self.bl_pvs[name.group(1)] = {'PV': pv.group(1) + '_Mnu'}
-                    else:
-                        self.bl_pvs[name.group(1)] = {'PV': pv.group(1)}
-                    # indicate that it is a switch
-                    if 'Menu' in i:
-                        self.bl_pvs[name.group(1)]['switch'] = 'yes'
+            # user wants the following stripe
+            dmm_stripe = self.window.dmm_stripe.currentText()
 
-        # add some additional PVs that are not directly present in the bamline_main.xsubst
-        self.bl_pvs['dmmBeamOffset'] = {'PV': self.bl_pvs['DMM_Energy']['PV'] + 'y2.B'}
-        self.bl_pvs['dcmBeamOffset'] = {'PV': self.bl_pvs['DCM_Energy']['PV'] + 'z2.B'}
-        self.bl_pvs['dcmCrystalOrientation'] = {'PV': self.bl_pvs['DCM_Energy']['PV'] + 'selectCrystal'}
-        self.bl_pvs['dcmCrystalOrientation']['switch'] = 'yes'
+            # what DMM calculation is currently set?
+            dmm_band_epics = caget('OMS58:25003004_MnuAct.SVAL')
+            if dmm_stripe != dmm_band_epics:
+                destination_text = destination_text + '\nsetting EPICS calculation DMM-Stripe:\t %s --> %s' % \
+                               (dmm_band_epics, dmm_stripe)
+                move_motor_list['OMS58:25003004_Mnu'] = dmm_stripe
 
-        # add 'cff' to the energy pseudomotors
-        self.bl_pvs['DMM_Energy'] = {'PV': self.bl_pvs['DMM_Energy']['PV'] + 'cff'}
-        self.bl_pvs['DCM_Energy'] = {'PV': self.bl_pvs['DCM_Energy']['PV'] + 'cff'}
+            # what's with the offset?
+            dmm_off = self.window.dmm_off.value()
+            bl_offset += dmm_off
+            dmm_off_epics = caget('Energ:25000007y2.B')
 
-    def choose_move(self):
+            if dmm_off != dmm_off_epics:
+                destination_text = destination_text + '\nsetting DMM-Offset:\t %.2f --> %.2f' % (dmm_off_epics, dmm_off)
+                move_motor_list['Energ:25000007y2.B'] = dmm_off
 
-        if self.efile:
+            if self.window.goto_e_max.isChecked() and dmm_stripe != 'Pd' and not self.window.dcm_in.isChecked():
+                # forward energy_max to the EPICS-energy-record
+                dmm_energy = round(caget('Energ:25000007rbv'), 3)
+                if dmm_energy != round(self.energy_max, 3):
+                    destination_text = destination_text + '\nsetting DMM-Energy:\t %.3f --> %.3f' \
+                                       % (dmm_energy, round(self.energy_max, 3))
+                    move_motor_list['Energ:25000007cff'] = round(self.energy_max, 3)
+            else:
+                # forward the theta-angle
+                dmm_theta = self.window.dmm_theta.value()
+                dmm_theta_epics = round(caget('OMS58:25000007.RBV'), 5)
+                if dmm_theta != dmm_theta_epics:
+                    destination_text = destination_text + '\nmoving DMM-Theta-1:\t %.4f --> %.4f' \
+                                                          '\nmoving DMM-Theta-2 to\t %.4f' \
+                                       % (dmm_theta_epics, dmm_theta, dmm_theta)
+                    move_motor_list['OMS58:25000007'] = dmm_theta
+                    move_motor_list['OMS58:25001003'] = dmm_theta
 
-            msg_box = QtGui.QMessageBox()
-            msg_box.setWindowTitle('Choose positions')
-            msg_box.setIcon(QtGui.QMessageBox.Warning)
+                # calculate the corresponding dmm_z2
+                dmm_z2 = round(dmm_off / math.tan(math.radians(2 * dmm_theta)), 2)
+                dmm_z2_epics = round(caget('OMS58:25001002.RBV'), 2)
+                dmm_z2_hlm = round(caget('OMS58:25001002.HLM'), 2)
+
+                if dmm_z2 > dmm_z2_hlm:
+                    dmm_off_needed = round(dmm_z2_hlm * math.tan(math.radians(2 * dmm_theta)), 2)
+                    wrong_pd_off_text = 'The calculated DMM_Z2 = %.2f exceeds the High-Limit. You need a ' \
+                                        'DMM-Offset = %.2f or lower. Please recalculate!' % (dmm_z2, dmm_off_needed)
+
+                if dmm_z2 != dmm_z2_epics:
+                    destination_text = destination_text + '\nmoving DMM-Z_2:\t %.2f --> %.2f' % (dmm_z2_epics, dmm_z2)
+                    move_motor_list['OMS58:25001002'] = dmm_z2
+        else:
+            # take the DMM out if necessary
+            dmm_y1 = round(caget('OMS58:25001000.RBV'), 2)
+            if dmm_y1 > -5.:
+                destination_text = destination_text + '\nmoving DMM out:'
+                destination_text = destination_text + '\nmoving DMM-Y_1 to\t -5'
+                move_motor_list['OMS58:25001000'] = -5.
+                destination_text = destination_text + '\nmoving DMM-Theta-1+2 to ~0'
+                move_motor_list['OMS58:25000007'] = 0.05
+                move_motor_list['OMS58:25001003'] = 0.
+                destination_text = destination_text + '\nmoving DMM-Y_2 to\t 15'
+                move_motor_list['OMS58:25001004'] = 15.
+
+        if self.window.dcm_in.isChecked():
+
+            # if the DCM is out, drive it in
+            # put the DCM to the DMM-Offset if necessary
+            dcm_y = round(caget('OMS58:25001007.RBV'), 2)
+            if self.window.dmm_in.isChecked():
+                dmm_off = self.window.dmm_off.value()
+                if dcm_y != dmm_off:
+                    destination_text = destination_text + '\nmoving DCM-Y:\t %.2f --> %.2f' % (dcm_y, dmm_off)
+                    move_motor_list['OMS58:25001007'] = dmm_off
+            else:
+                if dcm_y != 0.:
+                    destination_text = destination_text + '\nmoving DCM-Y:\t %.2f --> 0' % dcm_y
+                    move_motor_list['OMS58:25001007'] = 0
+
+            # user wants the following crystalorientation
+            dcm_orientation = self.window.dcm_orientation.currentText()
+
+            # what DCM orientation is currently set?
+            dcm_orientation_epics = caget('Energ:25002000selectCrystal')
+            if dcm_orientation_epics == 0:
+                dcm_orientation_epics = '111'
+            elif dcm_orientation_epics == 1:
+                dcm_orientation_epics = '311'
+            elif dcm_orientation_epics == 2:
+                dcm_orientation_epics = '333'
+
+            if dcm_orientation != dcm_orientation_epics:
+                destination_text = destination_text + '\nsetting EPICS DCM calculation Crystal:\t %s --> %s' % \
+                                   (dcm_orientation_epics, dcm_orientation)
+                if dcm_orientation == '311':
+                    move_motor_list['Energ:25002000selectCrystal'] = 1
+                elif dcm_orientation == '333':
+                    move_motor_list['Energ:25002000selectCrystal'] = 2
+                else:
+                    move_motor_list['Energ:25002000selectCrystal'] = 0
+
+            # what's with the offset?
+            dcm_off = self.window.dcm_off.value()
+            bl_offset += dcm_off
+            dcm_off_epics = caget('Energ:25002000z2.B')
+
+            if dcm_off != dcm_off_epics:
+                destination_text = destination_text + '\nsetting DCM-Offset:\t %.2f --> %.2f' % (dcm_off_epics, dcm_off)
+                move_motor_list['Energ:25002000z2.B'] = dcm_off
+
+            dcm_energy = round(caget('Energ:25002000rbv'), 3)
+            if dcm_energy != round(self.energy_max, 3):
+                destination_text = destination_text + '\nsetting DCM-Energy:\t %.3f --> %.3f' \
+                                   % (dcm_energy, round(self.energy_max, 3))
+                move_motor_list['Energ:25002000cff'] = round(self.energy_max, 3)
+
+        else:
+            # take the DCM out if necessary
+            dcm_y = round(caget('OMS58:25001007.RBV'), 2)
+            if dcm_y > -5.:
+                destination_text = destination_text + '\nmoving DCM out:'
+                destination_text = destination_text + '\nmoving DCM-Y to\t -5'
+                move_motor_list['OMS58:25001007'] = -5.
+                destination_text = destination_text + '\nmoving DCM-Theta to\t ~0'
+                move_motor_list['OMS58:25002000'] = 0.05
+                destination_text = destination_text + '\nmoving DCM-Y_2 to\t 40'
+                move_motor_list['OMS58:25002003'] = 40.
+
+        # move the Beamstop a bit under the beam
+        beamstop = round(caget('OMS58:25003001.RBV'), 2)
+        beamstop_hlm = round(caget('OMS58:25003001.HLM'), 2)
+        beamstop_at_hlm = caget('OMS58:25003001.HLS')
+        s1_ver_size = round(caget('Slot:25000002gapSize.RBV'), 2)
+        beamstop_req = round(bl_offset - s1_ver_size / 2 - 2., 2)
+        if beamstop != beamstop_req:
+            if beamstop_req < beamstop_hlm:
+                destination_text = destination_text + '\nmoving Beamstop:\t %.2f --> %.2f' % (beamstop, beamstop_req)
+                move_motor_list['OMS58:25003001'] = beamstop_req
+            elif beamstop_at_hlm == 0:
+                destination_text = destination_text + '\nmoving Beamstop:\t %.2f --> %.2f (~High-Limit)' \
+                                   % (beamstop, beamstop_hlm)
+                move_motor_list['OMS58:25003001'] = beamstop_hlm
+
+        # move s2_ver_pos to the total bl_offset
+        s2_ver_pos = round(caget('Slot:25003006gapPos.RBV'), 2)
+        if s2_ver_pos != bl_offset:
+            destination_text = destination_text + '\nmoving S2_verPos:\t %.2f --> %.2f' % (s2_ver_pos, bl_offset)
+            move_motor_list['Slot:25003006gapPos'] = bl_offset
+            # use s2_ver_pos as trigger to move extra motors
+            bl_offset_diff = bl_offset - s2_ver_pos
+
+        # move the window to the total bl_offset
+        window = round(caget('OMS58:25003007.RBV'), 2)
+        if window != bl_offset:
+            destination_text = destination_text + '\nmoving Window:\t %.2f --> %.2f' % (window, bl_offset)
+            move_motor_list['OMS58:25003007'] = bl_offset
+
+        if not self.window.dmm_in.isChecked() and not self.window.dcm_in.isChecked():
+            destination_text = destination_text + '\n\nATTENTION! You are setting the white beam!\nOnly possible with' \
+                                                  ' closed NebenBeamShutter.'
+            white_beam = True
+
+        # move extra motors
+        if bl_offset_diff != 0:
+            if self.window.off_expTable.isChecked():
+                exp_table = round(caget('OMS58:25004004.RBV'), 2)
+                exp_table_new = exp_table + bl_offset_diff
+                destination_text = destination_text + '\nmoving EXP_TISCH:\t %.2f --> %.2f' % (exp_table, exp_table_new)
+                move_motor_list['OMS58:25004004'] = exp_table_new
+            if self.window.off_ctTable.isChecked():
+                ct_table = round(caget('OMS58:25004003.RBV'), 2)
+                ct_table_new = ct_table + bl_offset_diff
+                destination_text = destination_text + '\nmoving CT-Table_Y:\t %.2f --> %.2f' % (ct_table, ct_table_new)
+                move_motor_list['OMS58:25004003'] = ct_table_new
+            if self.window.off_custom.toPlainText():
+                print(self.window.off_custom.toPlainText())
+
+        # break if recalculation because of DMM-Offset is needed
+        if wrong_pd_off_text:
+            info_box = QtGui.QMessageBox()
+            info_box.setWindowTitle('Recalculate DMM-Offset.')
+            info_box.setIcon(QtGui.QMessageBox.Warning)
+            info_box.setStandardButtons(QtGui.QMessageBox.Ok)
+            info_box.setText(wrong_pd_off_text)
+            info_box.exec_()
+            return
+
+        # show a message box to confirm movement
+        msg_box = QtGui.QMessageBox()
+        msg_box.setWindowTitle('Go there!')
+        msg_box.setIcon(QtGui.QMessageBox.Warning)
+        if destination_text == 'Confirm following movements:\n':
+            destination_text = 'There is nothing to move, we are already there.'
+            msg_box.setStandardButtons(QtGui.QMessageBox.Ok)
+        else:
             msg_box.setStandardButtons(QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok)
-            h5_button = msg_box.button(QtGui.QMessageBox.Ok)
-            h5_button.setText('Use h5-File')
-            gui_button = msg_box.button(QtGui.QMessageBox.Cancel)
-            gui_button.setText('Use nominal')
             msg_box.setEscapeButton(QtGui.QMessageBox.Cancel)
             msg_box.setDefaultButton(QtGui.QMessageBox.Ok)
-            msg_box.setInformativeText('The following h5-File is loaded:\n%s\nUse the positions from the h5-File or '
-                                       'use the nominal GUI positions?' % self.window.pathLine.text())
-
-            retval = msg_box.exec_()
-            # Cancel = 4194304
-            # Ok = 1024
+            msg_box.setInformativeText('Are you sure you want to proceed ?')
+        msg_box.setText(destination_text)
+        retval = msg_box.exec_()
+        # Cancel = 4194304
+        # Ok = 1024
+        if destination_text != 'There is nothing to move, we are already there.':
             if retval == 1024:
-                self.bl_move(source='h5')
-            else:
-                self.bl_move()
-        else:
-            self.bl_move()
-
-    def bl_move(self, source='gui'):
-
-        """Get the destination positions from the GUI or from the loaded h5-File."""
-
-        if source == 'h5':
-
-            for mdl in self.efile.get_metadata(ef.Section.Snapshot):
-                if mdl.getName() in self.bl_pvs:
-                    element = self.efile.get_metadata(ef.Section.Snapshot, name=mdl.getName())
-                    position = self.efile.get_data(element[0])
-                    position = position.iloc[0][0]
-                    try:
-                        float(position)
-                        self.bl_pvs[mdl.getName()]['destination'] = round(position, 4)
-                    except ValueError:
-                        self.bl_pvs[mdl.getName()]['destination'] = position
-
-        else:
-            bl_offset = 0
-
-            # the filters
-            self.bl_pvs['FILTER_1_disc']['destination'] = self.window.filter1.currentText()
-            self.bl_pvs['FILTER_2_disc']['destination'] = self.window.filter2.currentText()
-
-            if self.window.dmm_with_filters.isChecked():
-                self.bl_pvs['DMM_Filter_Mode']['destination'] = 'Energy & Filter'
-            else:
-                self.bl_pvs['DMM_Filter_Mode']['destination'] = 'Energy only'
-
-            # the DMM
-            if self.window.dmm_in.isChecked():
-
-                # if the DMM is out, drive it in (DMM_Y_1 -> 0)
-                self.bl_pvs['DMM_Y_1']['destination'] = 0
-
-                # user wants the following stripe
-                self.bl_pvs['DMM_X_disc']['destination'] = self.window.dmm_stripe.currentText()
-
-                # how is the dmmOffset?
-                self.bl_pvs['dmmBeamOffset']['destination'] = self.window.dmm_off.value()
-                bl_offset += self.window.dmm_off.value()
-
-                if self.window.goto_e_max.isChecked() and self.bl_pvs['DMM_X_disc']['destination'] != 'Pd' and not \
-                        self.window.dcm_in.isChecked():
-                    # forward energy_max to the DMM-energy-record
-                    self.bl_pvs['DMM_Energy']['destination'] = round(self.energy_max, 3)
-                else:
-                    # forward the theta-angle
-                    self.bl_pvs['DMM_THETA_1']['destination'] = self.window.dmm_theta.value()
-                    self.bl_pvs['DMM_THETA_2']['destination'] = self.window.dmm_theta.value()
-
-                    # calculate the corresponding dmm_z2
-                    self.bl_pvs['DMM_Z_2']['destination'] = \
-                        round(self.bl_pvs['dmmBeamOffset']['destination'] /
-                              math.tan(math.radians(2 * self.bl_pvs['DMM_THETA_1']['destination'])), 2)
-                    dmm_z2_hlm = round(caget(self.bl_pvs['DMM_Z_2']['PV'] + '.HLM'), 2)
-
-                    # break if recalculation because of DMM-Offset is needed
-                    if self.bl_pvs['DMM_Z_2']['destination'] > dmm_z2_hlm:
-                        dmm_off_needed = round(dmm_z2_hlm *
-                                               math.tan(math.radians(2 * self.bl_pvs['DMM_THETA_1']['destination'])), 2)
-                        wrong_pd_off_text = 'The calculated DMM_Z2 = %.2f exceeds the High-Limit. You need a ' \
-                                            'DMM-Offset = %.2f or lower. Please recalculate!' % \
-                                            (self.bl_pvs['DMM_Z_2']['destination'], dmm_off_needed)
-
+                # user confirmed
+                if white_beam:
+                    # NebenBeamShutter-State: 2 == opened, 1 == closed
+                    nbs = caget('BS02R02U102L:State')
+                    if nbs != 1:
                         info_box = QtGui.QMessageBox()
-                        info_box.setWindowTitle('Recalculate DMM-Offset.')
+                        info_box.setWindowTitle('Close the NebenBeamShutter.')
                         info_box.setIcon(QtGui.QMessageBox.Warning)
                         info_box.setStandardButtons(QtGui.QMessageBox.Ok)
-                        info_box.setText(wrong_pd_off_text)
+                        info_box.setText('Close the NebenBeamShutter and retry.')
                         info_box.exec_()
                         return
-
-            else:
-                # take the DMM out if necessary
-                if round(caget(self.bl_pvs['DMM_Y_1']['PV']), 2) > -5.:
-                    self.bl_pvs['DMM_Y_1']['destination'] = -5
-                    self.bl_pvs['DMM_THETA_1']['destination'] = 0.05
-                    self.bl_pvs['DMM_THETA_2']['destination'] = 0
-                    self.bl_pvs['DMM_Y_2']['destination'] = 15
-
-            # the DCM
-            if self.window.dcm_in.isChecked():
-
-                # if the DCM is out, drive it in, put the DCM to the DMM-Offset if necessary
-                if self.window.dmm_in.isChecked():
-                    self.bl_pvs['DCM_Y']['destination'] = self.window.dmm_off.value()
-                else:
-                    self.bl_pvs['DCM_Y']['destination'] = 0
-
-                # user wants the following crystalorientation
-                self.bl_pvs['dcmCrystalOrientation']['destination'] = self.window.dcm_orientation.currentText()
-
-                # what's with the offset?
-                self.bl_pvs['dcmBeamOffset']['destination'] = self.window.dcm_off.value()
-                bl_offset += self.window.dcm_off.value()
-
-                # forward energy_max to the DCM-energy-record
-                self.bl_pvs['DCM_Energy']['destination'] = round(self.energy_max, 4)
-
-            else:
-                # take the DCM out if necessary
-                if round(caget(self.bl_pvs['DCM_Y']['PV']), 2) > -5.:
-                    self.bl_pvs['DCM_Y']['destination'] = -5
-                    self.bl_pvs['DCM_THETA']['destination'] = 0.05
-                    self.bl_pvs['DCM_Y_2']['destination'] = 40
-
-            # move the Beamstop a bit under the beam
-            beamstop_hlm = round(caget(self.bl_pvs['BEAMSTOP']['PV'] + '.HLM'), 2)
-            self.bl_pvs['BEAMSTOP']['destination'] = round(bl_offset -
-                                                           round(caget(self.bl_pvs['S1_verSize']['PV']), 2) / 2 - 2., 2)
-            if self.bl_pvs['BEAMSTOP']['destination'] > beamstop_hlm:
-                self.bl_pvs['BEAMSTOP']['destination'] = beamstop_hlm
-
-            # move s2_ver_pos to the total bl_offset
-            self.bl_pvs['S2_verPos']['destination'] = bl_offset
-
-            # move the window to the total bl_offset
-            self.bl_pvs['WINDOW']['destination'] = bl_offset
-            # use s2_ver_pos as trigger to move extra motors
-            bl_offset_diff = bl_offset - round(caget(self.bl_pvs['S2_verPos']['PV']), 2)
-
-            # move extra motors if there was a difference to the total bl_offset
-            if bl_offset_diff != 0:
-                if self.window.off_expTable.isChecked():
-                    self.bl_pvs['EXP_TISCH']['destination'] = bl_offset_diff + \
-                                                              round(caget(self.bl_pvs['EXP_TISCH']['PV']), 2)
-                if self.window.off_ctTable.isChecked():
-                    self.bl_pvs['CT-Table_Y']['destination'] = bl_offset_diff + \
-                                                               round(caget(self.bl_pvs['CT-Table_Y']['PV']), 2)
-
-        # show a message box to select axes and to confirm movement
-        dial = device_selection.DeviceDialog(self.bl_pvs)
-        if dial.exec_() == QtWidgets.QDialog.Accepted:
-            dial.move_selected_devices()
-
-        # delete the destination keys for the next iteration
-        for name in self.bl_pvs:
-            self.bl_pvs[name].pop('destination', None)
+                for i in move_motor_list:
+                    caput(i, move_motor_list[i])
+                    # wait a bit because it is not good to send requests in such high frequency to the VME-IOC
+                    time.sleep(0.1)
+                    #print("caput(%s, %s)" % (i, move_motor_list[i]))
+                return
+            # anything else than OK
+            return
 
     def load_path(self):
-
-        """User selects h5-File to be opened."""
 
         directory = '/messung/'
 
@@ -1182,9 +1248,6 @@ class Helper(QtCore.QObject):
         self.window.pathLine.setText('%s' % fname)
 
     def h5_navigate(self, direction=0):
-
-        """Takes the loaded path-string, replaces the filenumber (depending on the direction) and puts the new string
-        to the path-entry field."""
 
         fname = self.window.pathLine.text()
 
@@ -1241,8 +1304,7 @@ class Helper(QtCore.QObject):
 
     def load_h5(self):
 
-        """Loads the path-entry-field-string, opens the chosen h5-File using evefile package from PTB (only at BAMline!)
-        and sets the corresponding BAMlineHelper fields (spectrum)."""
+        """Loads a h5-File using evefile package from PTB and set the beamline status."""
 
         path = self.window.pathLine.text()
 
@@ -1255,40 +1317,40 @@ class Helper(QtCore.QObject):
         self.block_signals_to_bl_spectrum(block=True)
 
         # this list contains the necessary motor-names to load the beamline status into BAMline-helper
-        motor_list = ['FILTER_1_disc', 'FILTER_2_disc', 'DMM_X_disc', 'DMM_THETA_1', 'DMM_Y_2', 'DCM_THETA', 'DCM_Z_2']
+        motor_list = ['FILTER_1_disc', 'FILTER_2_disc', 'DMM_Stripe', 'DMM_THETA_1', 'DMM_Y_2', 'DCM_THETA', 'DCM_Z_2']
 
         # load the h5-file with eveFile
-        self.efile = ef.EveFile(path)
+        efile = ef.EveFile(path)
 
         # get the Scan-Start-Time first
-        fmd = self.efile.get_file_metadata()
+        fmd = efile.get_file_metadata()
         self.window.h5_start_time.setText(fmd.getStartTime())
 
         # first: look up which monochromator(s) were in use
-        mdl = self.efile.get_metadata(ef.Section.Snapshot, name='DMM_Y_1')
-        elem = self.efile.get_data(mdl[0])
+        mdl = efile.get_metadata(ef.Section.Snapshot, name='DMM_Y_1')
+        elem = efile.get_data(mdl[0])
         dmm_y_1_pos = elem.iloc[0][0]
         if dmm_y_1_pos > -1:
             self.window.dmm_in.setChecked(1)
         else:
             self.window.dmm_in.setChecked(0)
 
-        mdl = self.efile.get_metadata(ef.Section.Snapshot, name='DCM_Y')
-        elem = self.efile.get_data(mdl[0])
+        mdl = efile.get_metadata(ef.Section.Snapshot, name='DCM_Y')
+        elem = efile.get_data(mdl[0])
         dcm_y_pos = elem.iloc[0][0]
         if dcm_y_pos > -1:
             self.window.dcm_in.setChecked(1)
         else:
             self.window.dcm_in.setChecked(0)
 
-        # for older h5-files that did not contain the pseudo-motor 'DMM_X_disc', we need to look at DMM_X when
-        # 'DMM_X_disc' was not found
+        # for older h5-files that did not contain the pseudo-motor 'DMM_Stripe', we need to look at DMM_X when
+        # 'DMM_Stripe' was not found
         dmm_stripe_pseudo_found = False
 
         # now loop through the meta-data and set the proper positions/settings
-        mdl = self.efile.get_metadata(ef.Section.Snapshot)
+        mdl = efile.get_metadata(ef.Section.Snapshot)
         for md in mdl:
-            elem = self.efile.get_data(md)
+            elem = efile.get_data(md)
             column_name = elem.columns.tolist()
             # print(type(column_name[0]))  # <class 'str'>
             if column_name[0] in motor_list:
@@ -1303,7 +1365,7 @@ class Helper(QtCore.QObject):
                     if index >= 0:
                         self.window.filter2.setCurrentIndex(index)
                 if dmm_y_1_pos > -1:
-                    if column_name[0] == 'DMM_X_disc':
+                    if column_name[0] == 'DMM_Stripe':
                         dmm_stripe_pseudo_found = True
                         index = self.window.dmm_stripe.findText(position, QtCore.Qt.MatchFixedString)
                         if index >= 0:
@@ -1317,15 +1379,15 @@ class Helper(QtCore.QObject):
                         self.window.dcm_theta.setValue(position)
                     if column_name[0] == 'DCM_Z_2':
                         dcm_z_2 = position
-                        mdl = self.efile.get_metadata(ef.Section.Snapshot, name='DCM_THETA')
-                        elem = self.efile.get_data(mdl[0])
+                        mdl = efile.get_metadata(ef.Section.Snapshot, name='DCM_THETA')
+                        elem = efile.get_data(mdl[0])
                         dcm_theta = elem.iloc[0][0]
                         dcm_offset = dcm_z_2 * 2 * math.sin(math.radians(dcm_theta))
                         self.window.dcm_off.setValue(dcm_offset)
 
         if dmm_y_1_pos > -1 and not dmm_stripe_pseudo_found:
-            mdl = self.efile.get_metadata(ef.Section.Snapshot, name='DMM_X')
-            elem = self.efile.get_data(mdl[0])
+            mdl = efile.get_metadata(ef.Section.Snapshot, name='DMM_X')
+            elem = efile.get_data(mdl[0])
             position = elem.iloc[0][0]
             if -25 < position < -12.5:
                 self.window.dmm_stripe.setCurrentIndex(2)
