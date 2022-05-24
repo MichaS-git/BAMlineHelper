@@ -8,8 +8,6 @@ import numpy as np
 import glob
 import re
 
-from PySide2.QtWidgets import QAction
-
 import window_loader
 import helper_calc as calc
 import device_selection
@@ -211,10 +209,14 @@ class Helper(QtWidgets.QMainWindow):
         # new
         self.window.actionDMM_Param.triggered.connect(self.dmm_window)
 
-    def closeEvent(self):
+    # def closeEvent(self, event):
+    #
+    #     for window in QtWidgets.QApplication.topLevelWidgets():
+    #         window.close()
 
-        self.dmm_param = None
-        print('closed!')
+        # QtCore.QCoreApplication.instance().quit()
+        # self.dmm_param = None
+        # print('closed!')
 
     def dmm_window(self):
 
@@ -1358,5 +1360,5 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main = Helper()
     main.window.show()
-    app.aboutToQuit.connect(main.closeEvent)
+    #app.aboutToQuit.connect(main.closeEvent)
     sys.exit(app.exec_())
