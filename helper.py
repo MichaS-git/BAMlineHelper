@@ -8,11 +8,15 @@ import numpy as np
 import glob
 import re
 
+from PySide2.QtWidgets import QAction
+
+import window_loader
 import helper_calc as calc
 import device_selection
+import dmm_parameter
 import evefile as ef  # only at BAMline
 
-from PySide2 import QtWidgets, QtUiTools, QtCore, QtGui
+from PySide2 import QtWidgets, QtCore, QtGui
 from PySide2.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
 
 import xrt.backends.raycing.materials as rm
@@ -29,22 +33,6 @@ pg.setConfigOptions(antialias=True)  # enable antialiasing for prettier plots
 # using pyqtgraph with PySide2, see also:
 # https://stackoverflow.com/questions/60580391/pyqtgraph-with-pyside-2-and-qtdesigner
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-
-
-class UiLoader(QtUiTools.QUiLoader):
-    def createWidget(self, className, parent=None, name=""):
-        if className == "PlotWidget":
-            return pg.PlotWidget(parent=parent)
-        return super().createWidget(className, parent, name)
-
-
-def load_ui(fname):
-    fd = QtCore.QFile(fname)
-    if fd.open(QtCore.QFile.ReadOnly):
-        loader = UiLoader()
-        window = loader.load(fd)
-        fd.close()
-        return window
 
 
 class Worker(QRunnable):
@@ -119,12 +107,17 @@ class WorkerSignals(QObject):
     progress = Signal(int)
 
 
-class Helper(QtCore.QObject):
+class Helper(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(Helper, self).__init__()
-        self.window = load_ui(os.path.join(DIR_PATH, 'helper.ui'))
+        self.window = window_loader.load_ui(os.path.join(DIR_PATH, 'helper.ui'))
         self.window.installEventFilter(self)
+
+        # these are BAMline dmm start-parameters
+        self.dmm_param = dmm_parameter.DMMParam()
+        self.layer_pairs_wsi = 70
+        self.layer_pairs_mob4c = 180
 
         # class variables
         self.flux_xrt_wls = []  # empty flux array at startup
@@ -203,8 +196,8 @@ class Helper(QtCore.QObject):
         # status and GoTo parameters
         self.window.get_pos.clicked.connect(self.bl_status)
         self.window.action_button.clicked.connect(self.choose_move)
-        self.window.off_ctTable.toggled.connect(self.toggle_expTable_off)
-        self.window.off_expTable.toggled.connect(self.toggle_ctTable_off)
+        self.window.off_ctTable.toggled.connect(self.toggle_exp_table_off)
+        self.window.off_expTable.toggled.connect(self.toggle_ct_table_off)
 
         # load h5-File parameters
         self.efile = False
@@ -214,6 +207,18 @@ class Helper(QtCore.QObject):
         self.window.h5_prev.clicked.connect(lambda: self.h5_navigate(direction=1))
         self.window.h5_next.clicked.connect(lambda: self.h5_navigate(direction=2))
         self.window.h5_last.clicked.connect(lambda: self.h5_navigate(direction=3))
+
+        # new
+        self.window.actionDMM_Param.triggered.connect(self.dmm_window)
+
+    def closeEvent(self):
+
+        self.dmm_param = None
+        print('closed!')
+
+    def dmm_window(self):
+
+        self.dmm_param.show()
 
     def view_box(self):
 
@@ -231,12 +236,6 @@ class Helper(QtCore.QObject):
         pos = evt[0]
         mouse_point = self.window.Graph.plotItem.vb.mapSceneToView(pos)
         self.window.cursor_pos.setText("cursor position: x = %0.2f y = %0.2E" % (mouse_point.x(), mouse_point.y()))
-
-    def show(self):
-
-        """Show the main Window."""
-
-        self.window.show()
 
     def dmm_slider_theta_conversion(self):
 
@@ -483,7 +482,7 @@ class Helper(QtCore.QObject):
                 # topLayer, thickness topLayer in angstrom, bLayer, thickness bLayer in angstrom, number of layer pairs,
                 # substrate
                 ml = rm.Multilayer(mt, self.window.d_top_layer.value(), mb, self.window.d_bottom_layer.value(),
-                                   self.window.layer_pairs.value(), ms)
+                                   self.layer_pairs_mob4c, ms)
 
             elif ml_system == 'W/Si':
                 mt = rm.Material('Si', rho=2.336)  # top_layer
@@ -492,7 +491,7 @@ class Helper(QtCore.QObject):
                 # topLayer, thickness topLayer in angstrom, bLayer, thickness bLayer in angstrom, number of layer pairs,
                 # substrate (in this case same material as top_layer)
                 ml = rm.Multilayer(mt, self.window.d_top_layer.value(), mb, self.window.d_bottom_layer.value(),
-                                   self.window.layer_pairs.value(), mt)
+                                   self.layer_pairs_wsi, mt)
             else:
                 ml = rm.Material('Pd', rho=11.99)
 
@@ -681,7 +680,8 @@ class Helper(QtCore.QObject):
         # plot
         self.window.Graph.setLabel('bottom', text='Energy / keV')
         if self.window.line_button.isChecked() is True:
-            self.window.Graph.plot(energy_array / 1e3, spectrum_bl, pen='k', clear=True, name='s-pol')
+            self.window.Graph.plot(energy_array / 1e3, spectrum_bl, pen=pg.mkPen('k', width=1), clear=True,
+                                   name='s-pol')
         else:
             self.window.Graph.plot(energy_array / 1e3, spectrum_bl, pen='k', clear=True, name='s-pol', symbol='o')
 
@@ -899,7 +899,7 @@ class Helper(QtCore.QObject):
         # calculate and plot the new spectrum
         self.bl_spectrum()
 
-    def toggle_expTable_off(self):
+    def toggle_exp_table_off(self):
 
         """Only EXP_TISCH or CT-Table_Y can be checked."""
 
@@ -907,7 +907,7 @@ class Helper(QtCore.QObject):
         self.window.off_expTable.setChecked(False)
         self.window.off_expTable.blockSignals(False)
 
-    def toggle_ctTable_off(self):
+    def toggle_ct_table_off(self):
 
         """Only EXP_TISCH or CT-Table_Y can be checked."""
 
@@ -960,7 +960,14 @@ class Helper(QtCore.QObject):
         xsubsts = '/messung/eve/xml/xsubst/bamline_main.xsubst', '/messung/rfa/rfa.xsubst', '/messung/ct/ct.xsubst'\
             , '/messung/eve/xml/xsubst/ringstrom.xsubst', '/messung/eve/xml/xsubst/bamline_topo.xsubst'
 
+        # indicator for the main BL devices, 'exp' will be added to other devices to mark them for later use
+        main_device = True
+
         for xsubst in xsubsts:
+
+            if not xsubst == '/messung/eve/xml/xsubst/bamline_main.xsubst':
+                main_device = False
+
             with open(xsubst) as f:
                 content = f.read().splitlines()
 
@@ -988,6 +995,9 @@ class Helper(QtCore.QObject):
                     # indicate that it is a switch
                     if 'Menu' in i:
                         self.bl_pvs[name.group(1)]['switch'] = 'yes'
+                    # indicate if it is a device from the user experiment
+                    if not main_device:
+                        self.bl_pvs[name.group(1)]['exp'] = 'yes'
 
         # add some additional PVs that are not directly present in the bamline_main.xsubst
         self.bl_pvs['dmmBeamOffset'] = {'PV': self.bl_pvs['DMM_Energy']['PV'] + 'y2.B'}
@@ -1000,6 +1010,8 @@ class Helper(QtCore.QObject):
         self.bl_pvs['DCM_Energy'] = {'PV': self.bl_pvs['DCM_Energy']['PV'] + 'cff'}
 
     def choose_move(self):
+
+        """Ask the user whether to move to positions from h5-file or from the GUI."""
 
         if self.efile:
 
@@ -1028,7 +1040,7 @@ class Helper(QtCore.QObject):
 
     def bl_move(self, source='gui'):
 
-        """Get the destination positions from the GUI or from the loaded h5-File."""
+        """Get the destination positions from the GUI or from the h5-File and open the device selection window."""
 
         if source == 'h5':
 
@@ -1162,7 +1174,7 @@ class Helper(QtCore.QObject):
         if dial.exec_() == QtWidgets.QDialog.Accepted:
             dial.move_selected_devices()
 
-        # delete the destination keys for the next iteration
+        # delete the destination keys for the next pass
         for name in self.bl_pvs:
             self.bl_pvs[name].pop('destination', None)
 
@@ -1345,5 +1357,6 @@ if __name__ == '__main__':
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)  # console warning fix
     app = QtWidgets.QApplication(sys.argv)
     main = Helper()
-    main.show()
+    main.window.show()
+    app.aboutToQuit.connect(main.closeEvent)
     sys.exit(app.exec_())

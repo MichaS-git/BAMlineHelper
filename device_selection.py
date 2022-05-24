@@ -43,11 +43,13 @@ class DeviceDialog(QtWidgets.QDialog):
             layout_h = QtWidgets.QHBoxLayout()
 
             check_box = QtWidgets.QCheckBox()
-            if online:
+            # do not auto-check offline and user-experiment devices
+            if online and 'exp' not in self.device_list[name].keys():
                 check_box.setChecked(True)
             else:
                 check_box.setChecked(False)
-                check_box.setEnabled(False)
+                if not online:
+                    check_box.setEnabled(False)
             check_box.setObjectName(name)
 
             name_label = QtWidgets.QLabel(name)

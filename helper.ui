@@ -2044,7 +2044,14 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="actionLoad_h5"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="actionDMM_Param"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionBLMap">
@@ -2068,6 +2075,11 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>Load h5-File</string>
+   </property>
+  </action>
+  <action name="actionDMM_Param">
+   <property name="text">
+    <string>DMM-Parameter</string>
    </property>
   </action>
  </widget>
