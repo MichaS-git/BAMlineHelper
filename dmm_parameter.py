@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from PySide2 import QtCore
+from PySide2.QtWidgets import QWidget
 
 import window_loader
 
 
-class DMMParam(QtCore.QObject):
+class DMMParam(QWidget):
     def __init__(self):
         super().__init__()
         self.dmm_window = window_loader.load_ui('dmm_parameter.ui')

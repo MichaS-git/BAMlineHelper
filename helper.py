@@ -7,12 +7,12 @@ import math
 import numpy as np
 import glob
 import re
+import importlib
 
 import window_loader
 import helper_calc as calc
 import device_selection
 import dmm_parameter
-import evefile as ef  # only at BAMline
 
 from PySide2 import QtWidgets, QtCore, QtGui
 from PySide2.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
@@ -27,6 +27,10 @@ from epics import caget
 pg.setConfigOption('background', 'w')  # background color white (2D)
 pg.setConfigOption('foreground', 'k')  # foreground color black (2D)
 pg.setConfigOptions(antialias=True)  # enable antialiasing for prettier plots
+
+# if BAMlineHelper is started at an other location than BAMline, some functions will not work
+spam_spec = importlib.util.find_spec("evefile")
+at_bamline = spam_spec is not None
 
 # using pyqtgraph with PySide2, see also:
 # https://stackoverflow.com/questions/60580391/pyqtgraph-with-pyside-2-and-qtdesigner
@@ -107,13 +111,14 @@ class WorkerSignals(QObject):
 
 class Helper(QtWidgets.QMainWindow):
 
-    def __init__(self):
-        super(Helper, self).__init__()
+    def __init__(self, parent=None):
+        super(Helper, self).__init__(parent)
         self.window = window_loader.load_ui(os.path.join(DIR_PATH, 'helper.ui'))
+        self.dmm_window = window_loader.load_ui('dmm_parameter.ui')
         self.window.installEventFilter(self)
 
         # these are BAMline dmm start-parameters
-        self.dmm_param = dmm_parameter.DMMParam()
+        #self.dmm_param = dmm_parameter.DMMParam()
         self.layer_pairs_wsi = 70
         self.layer_pairs_mob4c = 180
 
@@ -124,7 +129,16 @@ class Helper(QtWidgets.QMainWindow):
         # load PVs from xsubst-File
         # dictionary with the beamline device-names and their corresponding PVs (see func.: initialize_pvs)
         self.bl_pvs = {}
-        self.initialize_pvs()
+        if at_bamline:
+            self.initialize_pvs()
+        else:
+            info_box = QtGui.QMessageBox()
+            info_box.setWindowTitle('Not at BAMline.')
+            info_box.setIcon(QtGui.QMessageBox.Warning)
+            info_box.setStandardButtons(QtGui.QMessageBox.Ok)
+            info_box.setText('You started BAMlineHelper not at BAMline. Some functions (e.g.: EPICS connections, '
+                             'loading h5-Files, ...) will not work.')
+            info_box.exec_()
 
         self.threadpool = QThreadPool()
         # print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
@@ -207,20 +221,18 @@ class Helper(QtWidgets.QMainWindow):
         self.window.h5_last.clicked.connect(lambda: self.h5_navigate(direction=3))
 
         # new
-        self.window.actionDMM_Param.triggered.connect(self.dmm_window)
+        self.window.actionDMM_Param.triggered.connect(self.dmm_parameter)
 
-    # def closeEvent(self, event):
+    def closeEvent(self):
+
+        print('closeEvent')
+        if self.dmm_window:
+            self.dmm_window.close()
+
+    # def dmm_window(self):
     #
-    #     for window in QtWidgets.QApplication.topLevelWidgets():
-    #         window.close()
-
-        # QtCore.QCoreApplication.instance().quit()
-        # self.dmm_param = None
-        # print('closed!')
-
-    def dmm_window(self):
-
-        self.dmm_param.show()
+    #     self.dmm_param = DMMParam()
+    #     self.dmm_param.show()
 
     def view_box(self):
 
@@ -1354,11 +1366,44 @@ class Helper(QtWidgets.QMainWindow):
         # calculate and plot the new spectrum
         self.bl_spectrum()
 
+    def dmm_parameter(self):
+
+        self.dmm_window.show()
+
+        self.dmm_window.dmm_2d_wsi.valueChanged.connect(lambda: self.new_dmm_parameter(stripe='wsi'))
+        self.dmm_window.dmm_2d_mob4c.valueChanged.connect(lambda: self.new_dmm_parameter(stripe='mob4c'))
+        self.dmm_window.dmm_gamma_wsi.valueChanged.connect(lambda: self.new_dmm_parameter(stripe='wsi'))
+        self.dmm_window.dmm_gamma_mob4c.valueChanged.connect(lambda: self.new_dmm_parameter(stripe='mob4c'))
+
+    def new_dmm_parameter(self, stripe='wsi'):
+
+        """Calculate top- and bottom-layer thickness when there was user input."""
+
+        # The original W/Si-multilayer of the BAMline: d(W) / d(W + Si) = 0.4
+        # d_W = (6.619 / 2) * 0.4 = 3.3095 * 0.4 = 1.3238 nm
+        # d_Si = 3.3095 - 1.3238 = 1.9857 nm
+        # 1 nm = 10 angstrom
+
+        if stripe == 'wsi':
+            d = self.dmm_window.dmm_2d_wsi.value() * 10 / 2
+            d_bottom = d * self.dmm_window.dmm_gamma_wsi.value()
+            d_top = d - d_bottom
+
+            self.dmm_window.d_top_layer_wsi.setValue(d_top)
+            self.dmm_window.d_bottom_layer_wsi.setValue(d_bottom)
+        else:
+            d = self.dmm_window.dmm_2d_mob4c.value() * 10 / 2
+            d_bottom = d * self.dmm_window.dmm_gamma_mob4c.value()
+            d_top = d - d_bottom
+
+            self.dmm_window.d_top_layer_mob4c.setValue(d_top)
+            self.dmm_window.d_bottom_layer_mob4c.setValue(d_bottom)
+
 
 if __name__ == '__main__':
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)  # console warning fix
     app = QtWidgets.QApplication(sys.argv)
     main = Helper()
     main.window.show()
-    #app.aboutToQuit.connect(main.closeEvent)
+    app.aboutToQuit.connect(main.closeEvent)
     sys.exit(app.exec_())
