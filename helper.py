@@ -116,7 +116,7 @@ class Helper(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(Helper, self).__init__(parent)
         self.window = window_loader.load_ui(os.path.join(DIR_PATH, 'helper.ui'))
-        self.dmm_window = window_loader.load_ui('dmm_parameter.ui')
+        self.dmm_window = window_loader.load_ui(os.path.join(DIR_PATH, 'dmm_parameter.ui'))
         self.window.installEventFilter(self)
 
         # class variables
