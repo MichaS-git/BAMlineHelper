@@ -214,6 +214,8 @@ class Helper(QtWidgets.QMainWindow):
 
     def quit_app(self):
 
+        """Quits the application."""
+
         if self.dmm_window:
             self.dmm_window.close()
 
@@ -399,6 +401,8 @@ class Helper(QtWidgets.QMainWindow):
         self.window.e_step.setEnabled(1)
 
     def bl_spectrum(self):
+
+        """Calculates and prints the spectrum."""
 
         # without a source-spectrum the energy_array comes from "def energy_range", otherwise from "def xrt_source_wls"
         if self.window.source_in.isChecked() is False:
@@ -738,7 +742,7 @@ class Helper(QtWidgets.QMainWindow):
                             continue
                         label = element + ' ' + edge + ' ' + str(energy)
                         label_pos -= 0.025
-                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen=(255, 0, 0, 255), label=label,
+                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen='g', label=label,
                                                     labelOpts={'position': label_pos, 'color': 'b',
                                                                'fill': (200, 200, 200, 50), 'movable': True})
                         self.window.Graph.addItem(edge_line)
@@ -750,7 +754,7 @@ class Helper(QtWidgets.QMainWindow):
                         energy = xraydb.xray_edge(element, edge.strip(), energy_only=True) / 1000.
                         label = element + ' ' + edge + ' ' + str(energy)
                         label_pos -= 0.025
-                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen=(255, 0, 0, 255), label=label,
+                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen='g', label=label,
                                                     labelOpts={'position': label_pos, 'color': 'b',
                                                                'fill': (200, 200, 200, 50), 'movable': True})
                         self.window.Graph.addItem(edge_line)
@@ -786,7 +790,7 @@ class Helper(QtWidgets.QMainWindow):
             self.window.dmm_stripe.setCurrentText(caget(self.bl_pvs['DMM_X_disc']['PV'], as_string=True))
 
             # angle first mirror (set also the slider-position)
-            dmm_theta_1 = round(caget(self.bl_pvs['DMM_THETA_1']['PV']), 4)
+            dmm_theta_1 = round(caget(self.bl_pvs['DMM_THETA_1']['PV']), 5)
             self.window.dmm_slider_theta.setValue(dmm_theta_1 * 1e4)
             self.window.dmm_theta.setValue(dmm_theta_1)
             # dmm offset
@@ -804,7 +808,7 @@ class Helper(QtWidgets.QMainWindow):
 
         # DCM
         # if dcm_y < -1mm and dcm_theta < 1: the DCM is out
-        dcm_theta = round(caget(self.bl_pvs['DCM_THETA']['PV']), 4)
+        dcm_theta = round(caget(self.bl_pvs['DCM_THETA']['PV']), 5)
         if round(caget(self.bl_pvs['DCM_Y']['PV']), 2) < -1. and dcm_theta < 1.:
             self.window.dcm_in.setChecked(0)
         else:
@@ -948,7 +952,9 @@ class Helper(QtWidgets.QMainWindow):
             msg_box.setEscapeButton(QtGui.QMessageBox.Cancel)
             msg_box.setDefaultButton(QtGui.QMessageBox.Ok)
             msg_box.setInformativeText('The following h5-File is loaded:\n%s\nUse the positions from the h5-File or '
-                                       'use the nominal GUI positions?' % self.window.pathLine.text())
+                                       'use the nominal GUI positions?\n\nYou can abort this procedure in the next '
+                                       'window no matter what you choose.\n\nFYI: If PVs are offline, this window can '
+                                       'freeze for some seconds (see console output).' % self.window.pathLine.text())
 
             retval = msg_box.exec_()
             # Cancel = 4194304
@@ -1102,7 +1108,7 @@ class Helper(QtWidgets.QMainWindow):
 
     def load_path(self):
 
-        """User selects h5-File to be opened."""
+        """Ask the user to select a h5-File to be opened."""
 
         directory = '/messung/'
 
@@ -1275,6 +1281,8 @@ class Helper(QtWidgets.QMainWindow):
         self.bl_spectrum()
 
     def dmm_parameter(self):
+
+        """Opens the DMM-Options Window. Any input will be forwarded to the main window."""
 
         self.dmm_window.show()
 
