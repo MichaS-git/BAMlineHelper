@@ -3,13 +3,13 @@
 import time
 
 from PySide2 import QtWidgets, QtCore
-from epics import caget, cainfo
+from epics import caget, caput, cainfo
 
 
 class DeviceDialog(QtWidgets.QDialog):
     def __init__(self, device_list):
         super().__init__()
-        self.setWindowTitle('Select devices for caput')
+        self.setWindowTitle('Select devices to move')
 
         self.device_list = device_list
 
@@ -21,9 +21,14 @@ class DeviceDialog(QtWidgets.QDialog):
             if 'destination' not in self.device_list[name].keys():
                 continue
 
+            # get the position of the PV; if the positions is a switch, get the position string
+            if 'switch' in self.device_list[name].keys():
+                pos = caget(self.device_list[name]['PV'], as_string=True, timeout=0.1)
+            else:
+                pos = caget(self.device_list[name]['PV'], timeout=0.1)
+
             # if the PV wasn't found, tell it to the user
             online = True
-            pos = caget(self.device_list[name]['PV'], timeout=0.1)
             # we have to compare with None because a zero position is not recognized as true
             if pos == None:
                 self.device_list[name]['position'] = 'PV OFFLINE!'
@@ -43,11 +48,13 @@ class DeviceDialog(QtWidgets.QDialog):
             layout_h = QtWidgets.QHBoxLayout()
 
             check_box = QtWidgets.QCheckBox()
-            if online:
+            # do not auto-check offline and user-experiment devices
+            if online and 'exp' not in self.device_list[name].keys():
                 check_box.setChecked(True)
             else:
                 check_box.setChecked(False)
-                check_box.setEnabled(False)
+                if not online:
+                    check_box.setEnabled(False)
             check_box.setObjectName(name)
 
             name_label = QtWidgets.QLabel(name)
@@ -116,6 +123,7 @@ class DeviceDialog(QtWidgets.QDialog):
 
         """Find all the checked devices and caput them to the desired position"""
 
+        pos = 0
         for box in self.findChildren(QtWidgets.QCheckBox):
             if box.checkState():
                 if 'switch' in self.device_list[box.objectName()].keys():
@@ -125,7 +133,7 @@ class DeviceDialog(QtWidgets.QDialog):
                     for i in self.findChildren(QtWidgets.QLineEdit, box.objectName() + 'dest'):
                         pos = i.text()
 
-                # caput(i, move_motor_list[i])
-                print("caput(%s, %s)" % (self.device_list[box.objectName()]['PV'], pos))
+                caput(self.device_list[box.objectName()]['PV'], pos)
+                # print("caput(%s, %s)" % (self.device_list[box.objectName()]['PV'], pos))
                 # wait a bit because it is not good to send requests in such high frequency to the VME-IOC
                 time.sleep(0.1)
