@@ -7,12 +7,13 @@ import math
 import numpy as np
 import glob
 import re
+import importlib
 
+import window_loader
 import helper_calc as calc
 import device_selection
-import evefile as ef  # only at BAMline
 
-from PySide2 import QtWidgets, QtUiTools, QtCore, QtGui
+from PySide2 import QtWidgets, QtCore, QtGui
 from PySide2.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
 
 import xrt.backends.raycing.materials as rm
@@ -26,25 +27,16 @@ pg.setConfigOption('background', 'w')  # background color white (2D)
 pg.setConfigOption('foreground', 'k')  # foreground color black (2D)
 pg.setConfigOptions(antialias=True)  # enable antialiasing for prettier plots
 
+# if BAMlineHelper is started at an other location than BAMline, some functions will not work
+spam_spec = importlib.util.find_spec("evefile")
+at_bamline = spam_spec is not None
+
+if at_bamline:
+    import evefile as ef  # only at BAMline
+
 # using pyqtgraph with PySide2, see also:
 # https://stackoverflow.com/questions/60580391/pyqtgraph-with-pyside-2-and-qtdesigner
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-
-
-class UiLoader(QtUiTools.QUiLoader):
-    def createWidget(self, className, parent=None, name=""):
-        if className == "PlotWidget":
-            return pg.PlotWidget(parent=parent)
-        return super().createWidget(className, parent, name)
-
-
-def load_ui(fname):
-    fd = QtCore.QFile(fname)
-    if fd.open(QtCore.QFile.ReadOnly):
-        loader = UiLoader()
-        window = loader.load(fd)
-        fd.close()
-        return window
 
 
 class Worker(QRunnable):
@@ -119,11 +111,12 @@ class WorkerSignals(QObject):
     progress = Signal(int)
 
 
-class Helper(QtCore.QObject):
+class Helper(QtWidgets.QMainWindow):
 
-    def __init__(self):
-        super(Helper, self).__init__()
-        self.window = load_ui(os.path.join(DIR_PATH, 'helper.ui'))
+    def __init__(self, parent=None):
+        super(Helper, self).__init__(parent)
+        self.window = window_loader.load_ui(os.path.join(DIR_PATH, 'helper.ui'))
+        self.dmm_window = window_loader.load_ui('dmm_parameter.ui')
         self.window.installEventFilter(self)
 
         # class variables
@@ -133,7 +126,16 @@ class Helper(QtCore.QObject):
         # load PVs from xsubst-File
         # dictionary with the beamline device-names and their corresponding PVs (see func.: initialize_pvs)
         self.bl_pvs = {}
-        self.initialize_pvs()
+        if at_bamline:
+            self.initialize_pvs()
+        else:
+            info_box = QtGui.QMessageBox()
+            info_box.setWindowTitle('Not at BAMline.')
+            info_box.setIcon(QtGui.QMessageBox.Warning)
+            info_box.setStandardButtons(QtGui.QMessageBox.Ok)
+            info_box.setText('You started BAMlineHelper not at BAMline. Some functions (e.g.: EPICS connections, '
+                             'loading h5-Files, ...) will not work.')
+            info_box.exec_()
 
         self.threadpool = QThreadPool()
         # print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
@@ -168,30 +170,22 @@ class Helper(QtCore.QObject):
         self.window.source_in.stateChanged.connect(self.bl_spectrum)
 
         # user input to filter parameters
-        self.window.filter1.currentIndexChanged.connect(self.set_filter_size)
-        self.window.filter2.currentIndexChanged.connect(self.set_filter_size)
-        self.window.d_filter1.valueChanged.connect(self.bl_spectrum)
-        self.window.d_filter2.valueChanged.connect(self.bl_spectrum)
+        self.window.filter1.currentIndexChanged.connect(self.bl_spectrum)
+        self.window.filter2.currentIndexChanged.connect(self.bl_spectrum)
         self.window.plot_elements.stateChanged.connect(self.bl_spectrum)
 
         # user input to dmm parameters
-        self.window.dmm_stripe.currentIndexChanged.connect(self.choose_dmm_stripe)
-        self.window.dmm_2d.valueChanged.connect(self.new_dmm_parameters)
-        self.window.dmm_gamma.valueChanged.connect(self.new_dmm_parameters)
-        self.window.layer_pairs.valueChanged.connect(self.bl_spectrum)
+        self.window.dmm_stripe.currentIndexChanged.connect(self.bl_spectrum)
         self.window.dmm_slider_theta.valueChanged.connect(self.dmm_slider_theta_conversion)
         self.window.dmm_slider_off.valueChanged.connect(self.dmm_slider_off_conversion)
         self.window.dmm_off.valueChanged.connect(self.bl_spectrum)
         self.window.dmm_theta.valueChanged.connect(self.bl_spectrum)
-        self.window.d_top_layer.valueChanged.connect(self.bl_spectrum)
-        self.window.dmm_one_ml.stateChanged.connect(self.bl_spectrum)
         self.window.dmm_in.stateChanged.connect(self.bl_spectrum)
         self.window.dmm_off_check.stateChanged.connect(self.bl_spectrum)
         self.window.dmm_with_filters.stateChanged.connect(self.bl_spectrum)
 
         # user input to dcm parameters
         self.window.dcm_in.stateChanged.connect(self.bl_spectrum)
-        self.window.dcm_one_crystal.stateChanged.connect(self.bl_spectrum)
         self.window.dcm_off_check.stateChanged.connect(self.bl_spectrum)
         self.window.dcm_orientation.currentIndexChanged.connect(self.bl_spectrum)
         self.window.dcm_slider_theta.valueChanged.connect(self.dcm_slider_theta_conversion)
@@ -203,8 +197,8 @@ class Helper(QtCore.QObject):
         # status and GoTo parameters
         self.window.get_pos.clicked.connect(self.bl_status)
         self.window.action_button.clicked.connect(self.choose_move)
-        self.window.off_ctTable.toggled.connect(self.toggle_expTable_off)
-        self.window.off_expTable.toggled.connect(self.toggle_ctTable_off)
+        self.window.off_ctTable.toggled.connect(self.toggle_exp_table_off)
+        self.window.off_expTable.toggled.connect(self.toggle_ct_table_off)
 
         # load h5-File parameters
         self.efile = False
@@ -214,6 +208,28 @@ class Helper(QtCore.QObject):
         self.window.h5_prev.clicked.connect(lambda: self.h5_navigate(direction=1))
         self.window.h5_next.clicked.connect(lambda: self.h5_navigate(direction=2))
         self.window.h5_last.clicked.connect(lambda: self.h5_navigate(direction=3))
+
+        # new
+        self.window.actionDMM_Param.triggered.connect(self.dmm_parameter)
+
+    def quit_app(self):
+
+        """Quits the application."""
+
+        if self.dmm_window:
+            self.dmm_window.close()
+
+    def eventFilter(self, obj, event):
+
+        """Calls the quit_app function to close other windows when main window is closed (via X).
+        see: https://stackoverflow.com/questions/53097415/pyside2-connect-close-by-window-x-to-custom-exit-method"""
+
+        if obj is self.window and event.type() == QtCore.QEvent.Close:
+            self.quit_app()
+            # comment in to block quitting the app with X
+        #     event.ignore()
+            return True
+        return super(Helper, self).eventFilter(obj, event)
 
     def view_box(self):
 
@@ -231,12 +247,6 @@ class Helper(QtCore.QObject):
         pos = evt[0]
         mouse_point = self.window.Graph.plotItem.vb.mapSceneToView(pos)
         self.window.cursor_pos.setText("cursor position: x = %0.2f y = %0.2E" % (mouse_point.x(), mouse_point.y()))
-
-    def show(self):
-
-        """Show the main Window."""
-
-        self.window.show()
 
     def dmm_slider_theta_conversion(self):
 
@@ -262,46 +272,6 @@ class Helper(QtCore.QObject):
 
         self.window.dcm_off.setValue(self.window.dcm_slider_off.value() / 1e2)
 
-    def choose_dmm_stripe(self):
-
-        """Sets the original DMM-Stripe parameters."""
-
-        self.window.dmm_2d.setEnabled(1)
-        self.window.layer_pairs.setEnabled(1)
-        self.window.dmm_gamma.setEnabled(1)
-
-        # gamma: ration of the high absorbing layer (in our case bottom) to the 2D-value
-        self.window.dmm_gamma.setValue(0.4)
-
-        if self.window.dmm_stripe.currentText() == 'W/Si':
-            self.window.dmm_2d.setValue(6.619)  # 2D-value in nm
-            self.window.layer_pairs.setValue(70)
-        if self.window.dmm_stripe.currentText() == 'Mo/B4C':
-            self.window.dmm_2d.setValue(5.736)  # 2D-value in nm
-            self.window.layer_pairs.setValue(180)
-        if self.window.dmm_stripe.currentText() == 'Pd':
-            self.window.dmm_gamma.setValue(1)
-            self.window.dmm_2d.setValue(0)
-            self.window.layer_pairs.setValue(0)
-            self.window.dmm_2d.setEnabled(0)
-            self.window.layer_pairs.setEnabled(0)
-            self.window.dmm_gamma.setEnabled(0)
-
-    def new_dmm_parameters(self):
-
-        """Calculate top- and bottom-layer thickness when there was user input."""
-
-        # The original W/Si-multilayer of the BAMline: d(W) / d(W + Si) = 0.4
-        # d_W = (6.619 / 2) * 0.4 = 3.3095 * 0.4 = 1.3238 nm
-        # d_Si = 3.3095 - 1.3238 = 1.9857 nm
-        # 1 nm = 10 angstrom
-        d = self.window.dmm_2d.value() * 10 / 2
-        d_bottom = d * self.window.dmm_gamma.value()
-        d_top = d - d_bottom
-
-        self.window.d_top_layer.setValue(d_top)
-        self.window.d_bottom_layer.setValue(d_bottom)
-
     def calc_acceptance(self):
 
         """Calculate the angular acceptance at the experiment depending on the source distance."""
@@ -310,33 +280,6 @@ class Helper(QtCore.QObject):
         z_prime_max = math.atan(self.window.ver_mm.value() * 1e-3 / (2 * self.window.distance.value())) * 1000
         self.window.hor_acceptance.setValue(x_prime_max)
         self.window.ver_acceptance.setValue(z_prime_max)
-
-    def set_filter_size(self):
-
-        """Set the original filter thicknesses of the BAMline when users chooses a filter."""
-
-        filter1_text = self.window.filter1.currentText()
-        filter2_text = self.window.filter2.currentText()
-
-        if 'none' in filter1_text:
-            self.window.d_filter1.setValue(0.)
-        if '200' in filter1_text:
-            self.window.d_filter1.setValue(200.)
-        if '600' in filter1_text:
-            self.window.d_filter1.setValue(600.)
-        if '1' in filter1_text:
-            self.window.d_filter1.setValue(1000.)
-
-        if '50' in filter2_text:
-            self.window.d_filter2.setValue(50.)
-        if '60' in filter2_text:
-            self.window.d_filter2.setValue(60.)
-        if '200' in filter2_text:
-            self.window.d_filter2.setValue(200.)
-        if '500' in filter2_text:
-            self.window.d_filter2.setValue(500.)
-        if '1' in filter2_text:
-            self.window.d_filter2.setValue(1000.)
 
     def progress_bar(self, done):
 
@@ -459,6 +402,8 @@ class Helper(QtCore.QObject):
 
     def bl_spectrum(self):
 
+        """Calculates and prints the spectrum."""
+
         # without a source-spectrum the energy_array comes from "def energy_range", otherwise from "def xrt_source_wls"
         if self.window.source_in.isChecked() is False:
             energy_array = self.energy
@@ -482,8 +427,9 @@ class Helper(QtCore.QObject):
 
                 # topLayer, thickness topLayer in angstrom, bLayer, thickness bLayer in angstrom, number of layer pairs,
                 # substrate
-                ml = rm.Multilayer(mt, self.window.d_top_layer.value(), mb, self.window.d_bottom_layer.value(),
-                                   self.window.layer_pairs.value(), ms)
+                ml = rm.Multilayer(mt, self.dmm_window.d_top_layer_mob4c.value(), mb,
+                                   self.dmm_window.d_bottom_layer_mob4c.value(),
+                                   self.dmm_window.layer_pairs_mob4c.value(), ms)
 
             elif ml_system == 'W/Si':
                 mt = rm.Material('Si', rho=2.336)  # top_layer
@@ -491,8 +437,9 @@ class Helper(QtCore.QObject):
 
                 # topLayer, thickness topLayer in angstrom, bLayer, thickness bLayer in angstrom, number of layer pairs,
                 # substrate (in this case same material as top_layer)
-                ml = rm.Multilayer(mt, self.window.d_top_layer.value(), mb, self.window.d_bottom_layer.value(),
-                                   self.window.layer_pairs.value(), mt)
+                ml = rm.Multilayer(mt, self.dmm_window.d_top_layer_wsi.value(), mb,
+                                   self.dmm_window.d_bottom_layer_wsi.value(),
+                                   self.dmm_window.layer_pairs_wsi.value(), mt)
             else:
                 ml = rm.Material('Pd', rho=11.99)
 
@@ -500,87 +447,57 @@ class Helper(QtCore.QObject):
             theta = self.window.dmm_theta.value()
             dmm_spol, dmm_ppol = ml.get_amplitude(energy_array, math.sin(math.radians(theta)))[0:2]
 
-            # calculate reflection of only one mirror
-            if self.window.dmm_one_ml.isChecked():
-                spectrum_dmm = abs(dmm_spol) ** 2
-            else:
-                spectrum_dmm = abs(dmm_spol) ** 4
+            # calculate double reflection
+            spectrum_dmm = abs(dmm_spol) ** 4
 
             # autoselect the filters, depending on theta_1
             if self.window.dmm_with_filters.isChecked() and not self.window.dcm_in.isChecked() and ml_system != 'Pd':
 
                 self.window.filter1.blockSignals(True)
                 self.window.filter2.blockSignals(True)
-                self.window.d_filter1.blockSignals(True)
-                self.window.d_filter2.blockSignals(True)
 
                 if ml_system == 'W/Si':
                     if theta >= 1.1119:  # <= 10 keV
                         self.window.filter1.setCurrentIndex(0)
-                        self.window.d_filter1.setValue(600.)
                         self.window.filter2.setCurrentIndex(0)
-                        self.window.d_filter2.setValue(200.)
                     elif 1.1119 > theta >= 0.4448:  # <= 25 keV
                         self.window.filter1.setCurrentIndex(2)
-                        self.window.d_filter1.setValue(200.)
                         self.window.filter2.setCurrentIndex(0)
-                        self.window.d_filter2.setValue(200.)
                     elif 0.4448 > theta >= 0.3177:  # <= 35 keV
                         self.window.filter1.setCurrentIndex(0)
-                        self.window.d_filter1.setValue(600.)
                         self.window.filter2.setCurrentIndex(3)
-                        self.window.d_filter2.setValue(500.)
                     elif 0.3177 > theta >= 0.2647:  # <= 42 keV
                         self.window.filter1.setCurrentIndex(3)
-                        self.window.d_filter1.setValue(1000.)
                         self.window.filter2.setCurrentIndex(0)
-                        self.window.d_filter2.setValue(200.)
                     elif 0.2647 > theta >= 0.2224:  # <= 50 keV
                         self.window.filter1.setCurrentIndex(3)
-                        self.window.d_filter1.setValue(1000.)
                         self.window.filter2.setCurrentIndex(1)
-                        self.window.d_filter2.setValue(50.)
                     elif 0.2224 > theta >= 0.1544:  # <= 72 keV
                         self.window.filter1.setCurrentIndex(1)
-                        self.window.d_filter1.setValue(200.)
                         self.window.filter2.setCurrentIndex(0)
-                        self.window.d_filter2.setValue(200.)
                     elif theta < 0.1544:  # <= 95 keV
                         self.window.filter1.setCurrentIndex(0)
-                        self.window.d_filter1.setValue(600.)
                         self.window.filter2.setCurrentIndex(2)
-                        self.window.d_filter2.setValue(1000.)
+
                 elif ml_system == 'Mo/B4C':
                     if theta >= 0.8386:  # <= 15 keV
                         self.window.filter1.setCurrentIndex(0)
-                        self.window.d_filter1.setValue(600.)
                         self.window.filter2.setCurrentIndex(0)
-                        self.window.d_filter2.setValue(200.)
                     elif 0.8386 > theta >= 0.4193:  # <= 30 keV
                         self.window.filter1.setCurrentIndex(2)
-                        self.window.d_filter1.setValue(200.)
                         self.window.filter2.setCurrentIndex(0)
-                        self.window.d_filter2.setValue(200.)
                     elif 0.4193 > theta >= 0.2995:  # <= 42 keV
                         self.window.filter1.setCurrentIndex(0)
-                        self.window.d_filter1.setValue(600.)
                         self.window.filter2.setCurrentIndex(3)
-                        self.window.d_filter2.setValue(500.)
                     elif 0.2995 > theta >= 0.2516:  # <= 50 keV
                         self.window.filter1.setCurrentIndex(3)
-                        self.window.d_filter1.setValue(1000.)
                         self.window.filter2.setCurrentIndex(0)
-                        self.window.d_filter2.setValue(200.)
                     elif 0.2516 > theta >= 0.:  # <=  keV
                         self.window.filter1.setCurrentIndex(3)
-                        self.window.d_filter1.setValue(1000.)
                         self.window.filter2.setCurrentIndex(1)
-                        self.window.d_filter2.setValue(50.)
 
                 self.window.filter1.blockSignals(False)
                 self.window.filter2.blockSignals(False)
-                self.window.d_filter1.blockSignals(False)
-                self.window.d_filter2.blockSignals(False)
 
         # the DCM
         spectrum_dcm = 1
@@ -598,11 +515,8 @@ class Helper(QtCore.QObject):
                 crystal = rm.CrystalSi(hkl=hkl_ebene)
                 dcm_spol, dcm_ppol = crystal.get_amplitude(energy_array,
                                                            math.sin(math.radians(self.window.dcm_theta.value())))
-                # calculate reflection of only one crystal
-                if self.window.dcm_one_crystal.isChecked() is True:
-                    spectrum_dcm = spectrum_dcm + abs(dcm_spol) ** 2
-                else:
-                    spectrum_dcm = spectrum_dcm + abs(dcm_spol) ** 4
+                # calculate double reflection
+                spectrum_dcm = spectrum_dcm + abs(dcm_spol) ** 4
 
         # filter constellation
         filter1_text = self.window.filter1.currentText()
@@ -610,52 +524,62 @@ class Helper(QtCore.QObject):
 
         transm_f1 = 1
         transm_f2 = 1
+        thickness1 = 1
+        thickness2 = 1
 
-        # we need the "using_filter" variable to decide later if we need to search for zero values or not
-        using_filter = False
+        # rho == density in g * cm-3 at room temperature
 
-        if 'none' not in filter1_text or 'none' not in filter2_text:
-            using_filter = True
-
-            # rho == density in g * cm-3 at room temperature
-
-            if 'Al' in filter1_text:
-                filter1 = rm.Material('Al', rho=2.6989)
-            elif 'Be' in filter1_text:
-                filter1 = rm.Material('Be', rho=1.848)
-            elif 'Cu' in filter1_text:
-                filter1 = rm.Material('Cu', rho=8.92)
+        if 'Al' in filter1_text:
+            filter1 = rm.Material('Al', rho=2.6989)
+            if '200' in filter1_text:
+                thickness1 = 200
             else:
-                filter1 = None
+                thickness1 = 1000
+        elif 'Be' in filter1_text:
+            filter1 = rm.Material('Be', rho=1.848)
+            thickness1 = 600
+        elif 'Cu' in filter1_text:
+            filter1 = rm.Material('Cu', rho=8.92)
+            thickness1 = 200
+        else:
+            filter1 = None
 
-            if 'Al' in filter2_text:
-                filter2 = rm.Material('Al', rho=2.6989)
-            elif 'Be' in filter2_text:
-                filter2 = rm.Material('Be', rho=1.848)
-            elif 'Cu' in filter2_text:
-                filter2 = rm.Material('Cu', rho=8.92)
+        if 'Al' in filter2_text:
+            filter2 = rm.Material('Al', rho=2.6989)
+            if '500' in filter2_text:
+                thickness2 = 500
             else:
-                filter2 = None
+                thickness2 = 60
+        elif 'Be' in filter2_text:
+            filter2 = rm.Material('Be', rho=1.848)
+            thickness2 = 200
+        elif 'Cu' in filter2_text:
+            filter2 = rm.Material('Cu', rho=8.92)
+            if '50' in filter2_text:
+                thickness2 = 50
+            else:
+                thickness2 = 1000
+        else:
+            filter2 = None
 
-            if filter1:
-                absorp_koeff_f1 = filter1.get_absorption_coefficient(energy_array)  # in 1 / cm
-                filter1_thickness = self.window.d_filter1.value() * 0.0001  # in cm
-                transm_f1 = np.exp(-absorp_koeff_f1 * filter1_thickness)
+        if filter1:
+            absorp_koeff_f1 = filter1.get_absorption_coefficient(energy_array)  # in 1 / cm
+            filter1_thickness = thickness1 * 0.0001  # in cm
+            transm_f1 = np.exp(-absorp_koeff_f1 * filter1_thickness)
 
-            if filter2:
-                absorp_koeff_f2 = filter2.get_absorption_coefficient(energy_array)  # in 1 / cm
-                filter2_thickness = self.window.d_filter2.value() * 0.0001  # in cm
-                transm_f2 = np.exp(-absorp_koeff_f2 * filter2_thickness)
+        if filter2:
+            absorp_koeff_f2 = filter2.get_absorption_coefficient(energy_array)  # in 1 / cm
+            filter2_thickness = thickness2 * 0.0001  # in cm
+            transm_f2 = np.exp(-absorp_koeff_f2 * filter2_thickness)
 
         transm_f_total = transm_f1 * transm_f2
         # we need to exchange all zero values with the lowest value bigger zero to be able to plot logarithmic
         # find the lowest value bigger zero and replace the zeros with that value
         # maybe this gets obsolete with a newer pyqtgraph version...
-        if using_filter:
-            m = min(i for i in transm_f_total if i > 0)
-            if m < 1e-15:  # otherwise the plot ranges to e-200 ...
-                m = 1e-15
-            transm_f_total[transm_f_total < 1e-15] = m
+        # m = min(i for i in transm_f_total if i > 0)
+        # if m < 1e-15:  # otherwise the plot ranges to e-200 ...
+        #     m = 1e-15
+        # transm_f_total[transm_f_total < 1e-15] = m
 
         # what constellation do we have?
         if self.window.source_in.isChecked() is False:
@@ -681,7 +605,8 @@ class Helper(QtCore.QObject):
         # plot
         self.window.Graph.setLabel('bottom', text='Energy / keV')
         if self.window.line_button.isChecked() is True:
-            self.window.Graph.plot(energy_array / 1e3, spectrum_bl, pen='k', clear=True, name='s-pol')
+            self.window.Graph.plot(energy_array / 1e3, spectrum_bl, pen=pg.mkPen('k', width=1), clear=True,
+                                   name='s-pol')
         else:
             self.window.Graph.plot(energy_array / 1e3, spectrum_bl, pen='k', clear=True, name='s-pol', symbol='o')
 
@@ -701,8 +626,15 @@ class Helper(QtCore.QObject):
             if self.window.dmm_stripe.currentText() == 'Mo/B4C':
                 dmm_corr = 1.023
 
-            e_min = (hc_e * dmm_corr * 2 * z2_llm) / (self.window.dmm_2d.value() * self.window.dmm_off.value())
-            e_max = (hc_e * dmm_corr * 2 * z2_hlm) / (self.window.dmm_2d.value() * self.window.dmm_off.value())
+                e_min = (hc_e * dmm_corr * 2 * z2_llm) / (self.dmm_window.dmm_2d_mob4c.value() *
+                                                          self.window.dmm_off.value())
+                e_max = (hc_e * dmm_corr * 2 * z2_hlm) / (self.dmm_window.dmm_2d_mob4c.value() *
+                                                          self.window.dmm_off.value())
+            else:
+                e_min = (hc_e * dmm_corr * 2 * z2_llm) / (self.dmm_window.dmm_2d_wsi.value() *
+                                                          self.window.dmm_off.value())
+                e_max = (hc_e * dmm_corr * 2 * z2_hlm) / (self.dmm_window.dmm_2d_wsi.value() *
+                                                          self.window.dmm_off.value())
 
             dmm_emin_line = pg.InfiniteLine(movable=False, angle=90, pen='r', label='DMM-min={value:0.3f}keV',
                                             labelOpts={'position': 0.95, 'color': 'r', 'fill': (200, 200, 200, 50),
@@ -810,7 +742,7 @@ class Helper(QtCore.QObject):
                             continue
                         label = element + ' ' + edge + ' ' + str(energy)
                         label_pos -= 0.025
-                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen=(255, 0, 0, 255), label=label,
+                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen='g', label=label,
                                                     labelOpts={'position': label_pos, 'color': 'b',
                                                                'fill': (200, 200, 200, 50), 'movable': True})
                         self.window.Graph.addItem(edge_line)
@@ -822,7 +754,7 @@ class Helper(QtCore.QObject):
                         energy = xraydb.xray_edge(element, edge.strip(), energy_only=True) / 1000.
                         label = element + ' ' + edge + ' ' + str(energy)
                         label_pos -= 0.025
-                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen=(255, 0, 0, 255), label=label,
+                        edge_line = pg.InfiniteLine(movable=False, angle=90, pen='g', label=label,
                                                     labelOpts={'position': label_pos, 'color': 'b',
                                                                'fill': (200, 200, 200, 50), 'movable': True})
                         self.window.Graph.addItem(edge_line)
@@ -858,7 +790,7 @@ class Helper(QtCore.QObject):
             self.window.dmm_stripe.setCurrentText(caget(self.bl_pvs['DMM_X_disc']['PV'], as_string=True))
 
             # angle first mirror (set also the slider-position)
-            dmm_theta_1 = round(caget(self.bl_pvs['DMM_THETA_1']['PV']), 4)
+            dmm_theta_1 = round(caget(self.bl_pvs['DMM_THETA_1']['PV']), 5)
             self.window.dmm_slider_theta.setValue(dmm_theta_1 * 1e4)
             self.window.dmm_theta.setValue(dmm_theta_1)
             # dmm offset
@@ -876,7 +808,7 @@ class Helper(QtCore.QObject):
 
         # DCM
         # if dcm_y < -1mm and dcm_theta < 1: the DCM is out
-        dcm_theta = round(caget(self.bl_pvs['DCM_THETA']['PV']), 4)
+        dcm_theta = round(caget(self.bl_pvs['DCM_THETA']['PV']), 5)
         if round(caget(self.bl_pvs['DCM_Y']['PV']), 2) < -1. and dcm_theta < 1.:
             self.window.dcm_in.setChecked(0)
         else:
@@ -899,7 +831,7 @@ class Helper(QtCore.QObject):
         # calculate and plot the new spectrum
         self.bl_spectrum()
 
-    def toggle_expTable_off(self):
+    def toggle_exp_table_off(self):
 
         """Only EXP_TISCH or CT-Table_Y can be checked."""
 
@@ -907,7 +839,7 @@ class Helper(QtCore.QObject):
         self.window.off_expTable.setChecked(False)
         self.window.off_expTable.blockSignals(False)
 
-    def toggle_ctTable_off(self):
+    def toggle_ct_table_off(self):
 
         """Only EXP_TISCH or CT-Table_Y can be checked."""
 
@@ -930,23 +862,17 @@ class Helper(QtCore.QObject):
         self.window.source_in.blockSignals(block)
 
         # user input to filter parameters
-        self.window.d_filter1.blockSignals(block)
-        self.window.d_filter2.blockSignals(block)
         self.window.plot_elements.blockSignals(block)
 
         # user input to dmm parameters
-        self.window.layer_pairs.blockSignals(block)
         self.window.dmm_off.blockSignals(block)
         self.window.dmm_theta.blockSignals(block)
-        self.window.d_top_layer.blockSignals(block)
-        self.window.dmm_one_ml.blockSignals(block)
         self.window.dmm_in.blockSignals(block)
         self.window.dmm_off_check.blockSignals(block)
         self.window.dmm_with_filters.blockSignals(block)
 
         # user input to dcm parameters
         self.window.dcm_in.blockSignals(block)
-        self.window.dcm_one_crystal.blockSignals(block)
         self.window.dcm_off_check.blockSignals(block)
         self.window.dcm_orientation.blockSignals(block)
         self.window.dcm_theta.blockSignals(block)
@@ -960,7 +886,14 @@ class Helper(QtCore.QObject):
         xsubsts = '/messung/eve/xml/xsubst/bamline_main.xsubst', '/messung/rfa/rfa.xsubst', '/messung/ct/ct.xsubst'\
             , '/messung/eve/xml/xsubst/ringstrom.xsubst', '/messung/eve/xml/xsubst/bamline_topo.xsubst'
 
+        # indicator for the main BL devices, 'exp' will be added to other devices to mark them for later use
+        main_device = True
+
         for xsubst in xsubsts:
+
+            if not xsubst == '/messung/eve/xml/xsubst/bamline_main.xsubst':
+                main_device = False
+
             with open(xsubst) as f:
                 content = f.read().splitlines()
 
@@ -988,6 +921,9 @@ class Helper(QtCore.QObject):
                     # indicate that it is a switch
                     if 'Menu' in i:
                         self.bl_pvs[name.group(1)]['switch'] = 'yes'
+                    # indicate if it is a device from the user experiment
+                    if not main_device:
+                        self.bl_pvs[name.group(1)]['exp'] = 'yes'
 
         # add some additional PVs that are not directly present in the bamline_main.xsubst
         self.bl_pvs['dmmBeamOffset'] = {'PV': self.bl_pvs['DMM_Energy']['PV'] + 'y2.B'}
@@ -1000,6 +936,8 @@ class Helper(QtCore.QObject):
         self.bl_pvs['DCM_Energy'] = {'PV': self.bl_pvs['DCM_Energy']['PV'] + 'cff'}
 
     def choose_move(self):
+
+        """Ask the user whether to move to positions from h5-file or from the GUI."""
 
         if self.efile:
 
@@ -1014,7 +952,9 @@ class Helper(QtCore.QObject):
             msg_box.setEscapeButton(QtGui.QMessageBox.Cancel)
             msg_box.setDefaultButton(QtGui.QMessageBox.Ok)
             msg_box.setInformativeText('The following h5-File is loaded:\n%s\nUse the positions from the h5-File or '
-                                       'use the nominal GUI positions?' % self.window.pathLine.text())
+                                       'use the nominal GUI positions?\n\nYou can abort this procedure in the next '
+                                       'window no matter what you choose.\n\nFYI: If PVs are offline, this window can '
+                                       'freeze for some seconds (see console output).' % self.window.pathLine.text())
 
             retval = msg_box.exec_()
             # Cancel = 4194304
@@ -1028,7 +968,7 @@ class Helper(QtCore.QObject):
 
     def bl_move(self, source='gui'):
 
-        """Get the destination positions from the GUI or from the loaded h5-File."""
+        """Get the destination positions from the GUI or from the h5-File and open the device selection window."""
 
         if source == 'h5':
 
@@ -1162,13 +1102,13 @@ class Helper(QtCore.QObject):
         if dial.exec_() == QtWidgets.QDialog.Accepted:
             dial.move_selected_devices()
 
-        # delete the destination keys for the next iteration
+        # delete the destination keys for the next pass
         for name in self.bl_pvs:
             self.bl_pvs[name].pop('destination', None)
 
     def load_path(self):
 
-        """User selects h5-File to be opened."""
+        """Ask the user to select a h5-File to be opened."""
 
         directory = '/messung/'
 
@@ -1340,10 +1280,63 @@ class Helper(QtCore.QObject):
         # calculate and plot the new spectrum
         self.bl_spectrum()
 
+    def dmm_parameter(self):
+
+        """Opens the DMM-Options Window. Any input will be forwarded to the main window."""
+
+        self.dmm_window.show()
+
+        self.dmm_window.dmm_2d_wsi.valueChanged.connect(lambda: self.new_dmm_parameter(stripe='wsi'))
+        self.dmm_window.dmm_2d_mob4c.valueChanged.connect(lambda: self.new_dmm_parameter(stripe='mob4c'))
+        self.dmm_window.dmm_gamma_wsi.valueChanged.connect(lambda: self.new_dmm_parameter(stripe='wsi'))
+        self.dmm_window.dmm_gamma_mob4c.valueChanged.connect(lambda: self.new_dmm_parameter(stripe='mob4c'))
+
+        self.dmm_window.dmm_reset.clicked.connect(self.dmm_reset)
+
+        self.dmm_window.layer_pairs_wsi.valueChanged.connect(self.bl_spectrum)
+        self.dmm_window.layer_pairs_mob4c.valueChanged.connect(self.bl_spectrum)
+
+    def new_dmm_parameter(self, stripe='wsi'):
+
+        """Calculate top- and bottom-layer thickness when there was user input."""
+
+        # The original W/Si-multilayer of the BAMline: d(W) / d(W + Si) = 0.4
+        # d_W = (6.619 / 2) * 0.4 = 3.3095 * 0.4 = 1.3238 nm
+        # d_Si = 3.3095 - 1.3238 = 1.9857 nm
+        # 1 nm = 10 angstrom
+
+        if stripe == 'wsi':
+            d = self.dmm_window.dmm_2d_wsi.value() * 10 / 2
+            d_bottom = d * self.dmm_window.dmm_gamma_wsi.value()
+            d_top = d - d_bottom
+
+            self.dmm_window.d_top_layer_wsi.setValue(d_top)
+            self.dmm_window.d_bottom_layer_wsi.setValue(d_bottom)
+        else:
+            d = self.dmm_window.dmm_2d_mob4c.value() * 10 / 2
+            d_bottom = d * self.dmm_window.dmm_gamma_mob4c.value()
+            d_top = d - d_bottom
+
+            self.dmm_window.d_top_layer_mob4c.setValue(d_top)
+            self.dmm_window.d_bottom_layer_mob4c.setValue(d_bottom)
+
+        self.bl_spectrum()
+
+    def dmm_reset(self):
+
+        """Sets the original DMM parameters."""
+
+        self.dmm_window.layer_pairs_wsi.setValue(70)
+        self.dmm_window.dmm_2d_wsi.setValue(6.619)
+        self.dmm_window.dmm_gamma_wsi.setValue(0.4)
+        self.dmm_window.layer_pairs_mob4c.setValue(180)
+        self.dmm_window.dmm_2d_mob4c.setValue(5.736)
+        self.dmm_window.dmm_gamma_mob4c.setValue(0.4)
+
 
 if __name__ == '__main__':
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)  # console warning fix
     app = QtWidgets.QApplication(sys.argv)
     main = Helper()
-    main.show()
+    main.window.show()
     sys.exit(app.exec_())
