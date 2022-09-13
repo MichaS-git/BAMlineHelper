@@ -904,6 +904,7 @@ class Helper(QtWidgets.QMainWindow):
                 # we do not need the slit motors, we use their combination: slots
                 if 'Class="Slits"' in i:
                     continue
+
                 pv = re.search('PV="(.+?)"', i)
                 name = re.search('Name="(.+?)"', i)
 
@@ -973,7 +974,8 @@ class Helper(QtWidgets.QMainWindow):
         if source == 'h5':
 
             for mdl in self.efile.get_metadata(ef.Section.Snapshot):
-                if mdl.getName() in self.bl_pvs:
+                # if device found in Beamline-PVs and it is an axis: get the destination position
+                if mdl.getName() in self.bl_pvs and mdl.getDeviceType() == 2:
                     element = self.efile.get_metadata(ef.Section.Snapshot, name=mdl.getName())
                     position = self.efile.get_data(element[0])
                     position = position.iloc[0][0]
