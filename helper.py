@@ -13,8 +13,8 @@ import window_loader
 import helper_calc as calc
 import device_selection
 
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
 
 import xrt.backends.raycing.materials as rm
 import xrt.backends.raycing.sources as rs
@@ -22,6 +22,8 @@ import xraydb
 
 import pyqtgraph as pg
 from epics import caget
+
+import paramiko
 
 pg.setConfigOption('background', 'w')  # background color white (2D)
 pg.setConfigOption('foreground', 'k')  # foreground color black (2D)
@@ -34,7 +36,7 @@ at_bamline = spam_spec is not None
 if at_bamline:
     import evefile as ef  # only at BAMline
 
-# using pyqtgraph with PySide2, see also:
+# using pyqtgraph with PySide, see also:
 # https://stackoverflow.com/questions/60580391/pyqtgraph-with-pyside-2-and-qtdesigner
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -117,6 +119,7 @@ class Helper(QtWidgets.QMainWindow):
         super(Helper, self).__init__(parent)
         self.window = window_loader.load_ui(os.path.join(DIR_PATH, 'helper.ui'))
         self.dmm_window = window_loader.load_ui(os.path.join(DIR_PATH, 'dmm_parameter.ui'))
+        self.expIOC_window = window_loader.load_ui(os.path.join(DIR_PATH, 'expIOC_checker.ui'))
         self.window.installEventFilter(self)
 
         # class variables
@@ -129,13 +132,13 @@ class Helper(QtWidgets.QMainWindow):
         if at_bamline:
             self.initialize_pvs()
         else:
-            info_box = QtGui.QMessageBox()
+            info_box = QtWidgets.QMessageBox()
             info_box.setWindowTitle('Not at BAMline.')
-            info_box.setIcon(QtGui.QMessageBox.Warning)
-            info_box.setStandardButtons(QtGui.QMessageBox.Ok)
+            info_box.setIcon(QtWidgets.QMessageBox.Warning)
+            info_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
             info_box.setText('You started BAMlineHelper not at BAMline. Some functions (e.g.: EPICS connections, '
                              'loading h5-Files, ...) will not work.')
-            info_box.exec_()
+            info_box.exec()
 
         self.threadpool = QThreadPool()
         # print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
@@ -209,15 +212,21 @@ class Helper(QtWidgets.QMainWindow):
         self.window.h5_next.clicked.connect(lambda: self.h5_navigate(direction=2))
         self.window.h5_last.clicked.connect(lambda: self.h5_navigate(direction=3))
 
-        # new
+        # the DMM-Parameter window
         self.window.actionDMM_Param.triggered.connect(self.dmm_parameter)
+
+        # the experiment IOC window
+        self.window.actionExpIOC.triggered.connect(self.exp_ioc)
 
     def quit_app(self):
 
-        """Quits the application."""
+        """Quits the application and closes extra windows if they are open."""
 
         if self.dmm_window:
             self.dmm_window.close()
+
+        if self.expIOC_window:
+            self.expIOC_window.close()
 
     def eventFilter(self, obj, event):
 
@@ -227,8 +236,12 @@ class Helper(QtWidgets.QMainWindow):
         if obj is self.window and event.type() == QtCore.QEvent.Close:
             self.quit_app()
             # comment in to block quitting the app with X
-        #     event.ignore()
+            # event.ignore()
             return True
+        # if the main window was already closed, return nothing (prevents "main window not found" error on exit)
+        if not self.window:
+            return 0
+
         return super(Helper, self).eventFilter(obj, event)
 
     def view_box(self):
@@ -768,11 +781,13 @@ class Helper(QtWidgets.QMainWindow):
         self.block_signals_to_bl_spectrum(block=True)
 
         # the source, get the ring current and the magnetic field; if PVs are not accessible, use default values
-        ring_current = caget(self.bl_pvs['Bessy_Ringstrom']['PV'])
+        #ring_current = caget(self.bl_pvs['Bessy_Ringstrom']['PV'])
+        ring_current = 0
         if not ring_current:
             ring_current = 300.
         self.window.ring_current.setValue(ring_current)
-        magnetic_field = caget(self.bl_pvs['MagneticFluxDensity']['PV'])
+        #magnetic_field = caget(self.bl_pvs['MagneticFluxDensity']['PV'])
+        magnetic_field = 0
         if not magnetic_field:
             magnetic_field = 7.
         self.window.magnetic_field.setValue(magnetic_field)
@@ -884,7 +899,7 @@ class Helper(QtWidgets.QMainWindow):
         """Load all the motor-names and motor-pv's from the bamline_main.xsubst file (only available at BAMline)."""
 
         xsubsts = '/messung/eve/xml/xsubst/bamline_main.xsubst', '/messung/rfa/rfa.xsubst', '/messung/ct/ct.xsubst'\
-            , '/messung/eve/xml/xsubst/ringstrom.xsubst', '/messung/eve/xml/xsubst/bamline_topo.xsubst'
+            , '/messung/eve/xml/xsubst/ringstrom.xsubst', '/messung/eve/xml/xsubst/bamline_6G.xsubst', '/messung/eve/xml/xsubst/bamline_sample_tower.xsubst'
 
         # indicator for the main BL devices, 'exp' will be added to other devices to mark them for later use
         main_device = True
@@ -942,22 +957,22 @@ class Helper(QtWidgets.QMainWindow):
 
         if self.efile:
 
-            msg_box = QtGui.QMessageBox()
+            msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle('Choose positions')
-            msg_box.setIcon(QtGui.QMessageBox.Warning)
-            msg_box.setStandardButtons(QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok)
-            h5_button = msg_box.button(QtGui.QMessageBox.Ok)
+            msg_box.setIcon(QtWidgets.QMessageBox.Warning)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ok)
+            h5_button = msg_box.button(QtWidgets.QMessageBox.Ok)
             h5_button.setText('Use h5-File')
-            gui_button = msg_box.button(QtGui.QMessageBox.Cancel)
+            gui_button = msg_box.button(QtWidgets.QMessageBox.Cancel)
             gui_button.setText('Use nominal')
-            msg_box.setEscapeButton(QtGui.QMessageBox.Cancel)
-            msg_box.setDefaultButton(QtGui.QMessageBox.Ok)
+            msg_box.setEscapeButton(QtWidgets.QMessageBox.Cancel)
+            msg_box.setDefaultButton(QtWidgets.QMessageBox.Ok)
             msg_box.setInformativeText('The following h5-File is loaded:\n%s\nUse the positions from the h5-File or '
                                        'use the nominal GUI positions?\n\nYou can abort this procedure in the next '
                                        'window no matter what you choose.\n\nFYI: If PVs are offline, this window can '
                                        'freeze for some seconds (see console output).' % self.window.pathLine.text())
 
-            retval = msg_box.exec_()
+            retval = msg_box.exec()
             # Cancel = 4194304
             # Ok = 1024
             if retval == 1024:
@@ -1033,12 +1048,12 @@ class Helper(QtWidgets.QMainWindow):
                                             'DMM-Offset = %.2f or lower. Please recalculate!' % \
                                             (self.bl_pvs['DMM_Z_2']['destination'], dmm_off_needed)
 
-                        info_box = QtGui.QMessageBox()
+                        info_box = QtWidgets.QMessageBox()
                         info_box.setWindowTitle('Recalculate DMM-Offset.')
-                        info_box.setIcon(QtGui.QMessageBox.Warning)
-                        info_box.setStandardButtons(QtGui.QMessageBox.Ok)
+                        info_box.setIcon(QtWidgets.QMessageBox.Warning)
+                        info_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
                         info_box.setText(wrong_pd_off_text)
-                        info_box.exec_()
+                        info_box.exec()
                         return
 
             else:
@@ -1101,7 +1116,7 @@ class Helper(QtWidgets.QMainWindow):
 
         # show a message box to select axes and to confirm movement
         dial = device_selection.DeviceDialog(self.bl_pvs)
-        if dial.exec_() == QtWidgets.QDialog.Accepted:
+        if dial.exec() == QtWidgets.QDialog.Accepted:
             dial.move_selected_devices()
 
         # delete the destination keys for the next pass
@@ -1335,10 +1350,83 @@ class Helper(QtWidgets.QMainWindow):
         self.dmm_window.dmm_2d_mob4c.setValue(5.736)
         self.dmm_window.dmm_gamma_mob4c.setValue(0.4)
 
+    def exp_ioc(self):
+
+        """ Opens the menu for the Experiment IOC and gets infos about it"""
+
+        self.expIOC_window.show()
+
+        self.expIOC_window.checkStatus_btn.clicked.connect(self.check_child_process)
+        self.expIOC_window.checkBox_pegas_CtTopo.stateChanged.connect(self.edit_stcmd('< motor.cmd.SMCpegasus_CtTopo'))
+
+    def edit_stcmd(self, comment):
+        print('executing')
+        # Check if file exists
+        if not os.path.isfile('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd'):
+            print(f"File {'/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd'} does not exist.")
+            return
+
+        # Read the file
+        with open('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd', 'r') as file:
+            lines = file.readlines()
+
+        # Modify the file content
+        with (open('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd', 'w') as file):
+            for line in lines:
+                if comment in line:
+                    print(line)
+                    #if comment == '< motor.cmd.SMCpegasus_CtTopo' and not self.expIOC_window.checkBox_pegas_CtTopo.isChecked():
+                     #   if not line.strip().startswith('#'):
+                      #      line = '# ' + line
+                    #if comment == '< motor.cmd.SMCpegasus_CtTopo' and self.expIOC_window.checkBox_pegas_CtTopo.isChecked():
+                     #   if line.strip().startswith('#'):
+                      #      line = line.lstrip('#').lstrip()
+                file.write(line)
+
+    @Slot()
+    def check_child_process(self):
+        user = self.expIOC_window.user_input.text()
+        host = self.expIOC_window.host_input.text()
+        port = self.expIOC_window.port_input.text()
+
+        if not user or not host or not port:
+            QtWidgets.QMessageBox.warning(self, 'Input Error', 'Please provide all inputs.')
+            return
+
+        try:
+            # Set up SSH connection
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(hostname=host, username=user)
+
+            command = f"""
+            CHILD_PID=$(ps -e -o pid,ppid,cmd | grep 'procServ' | grep -v 'grep' | awk '{{print $1}}')
+            if [ -z "$CHILD_PID" ]; then
+                echo "Not found."
+                exit 1
+            fi
+            CHILD_NAME=$(ps -p $CHILD_PID -o cmd= | awk -F/ '{{print $NF}}')
+            echo "$CHILD_NAME"
+            """
+
+            stdin, stdout, stderr = ssh.exec_command(command)
+            result = stdout.read().decode() + stderr.read().decode()
+
+            ssh.close()
+
+            if "Not found." in result:
+                self.expIOC_window.status_line.setText("IOC down")
+            else:
+                self.expIOC_window.status_line.setText("IOC running")
+                self.expIOC_window.ioc_line.setText(result)
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, 'Error', str(e))
+
 
 if __name__ == '__main__':
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)  # console warning fix
     app = QtWidgets.QApplication(sys.argv)
     main = Helper()
     main.window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
