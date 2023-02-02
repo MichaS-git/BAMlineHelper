@@ -1,4 +1,4 @@
-from PySide2 import QtUiTools, QtCore
+from PySide6 import QtUiTools, QtCore
 import pyqtgraph as pg
 
 

@@ -13,8 +13,8 @@ import window_loader
 import helper_calc as calc
 import device_selection
 
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtCore import QRunnable, Slot, QThreadPool, QObject, Signal
 
 import xrt.backends.raycing.materials as rm
 import xrt.backends.raycing.sources as rs
@@ -34,7 +34,7 @@ at_bamline = spam_spec is not None
 if at_bamline:
     import evefile as ef  # only at BAMline
 
-# using pyqtgraph with PySide2, see also:
+# using pyqtgraph with PySide, see also:
 # https://stackoverflow.com/questions/60580391/pyqtgraph-with-pyside-2-and-qtdesigner
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -129,13 +129,13 @@ class Helper(QtWidgets.QMainWindow):
         if at_bamline:
             self.initialize_pvs()
         else:
-            info_box = QtGui.QMessageBox()
+            info_box = QtWidgets.QMessageBox()
             info_box.setWindowTitle('Not at BAMline.')
-            info_box.setIcon(QtGui.QMessageBox.Warning)
-            info_box.setStandardButtons(QtGui.QMessageBox.Ok)
+            info_box.setIcon(QtWidgets.QMessageBox.Warning)
+            info_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
             info_box.setText('You started BAMlineHelper not at BAMline. Some functions (e.g.: EPICS connections, '
                              'loading h5-Files, ...) will not work.')
-            info_box.exec_()
+            info_box.exec()
 
         self.threadpool = QThreadPool()
         # print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
@@ -227,8 +227,12 @@ class Helper(QtWidgets.QMainWindow):
         if obj is self.window and event.type() == QtCore.QEvent.Close:
             self.quit_app()
             # comment in to block quitting the app with X
-        #     event.ignore()
+            # event.ignore()
             return True
+        # if the main window was already closed, return nothing (prevents "main window not found" error on exit)
+        if not self.window:
+            return 0
+
         return super(Helper, self).eventFilter(obj, event)
 
     def view_box(self):
@@ -942,22 +946,22 @@ class Helper(QtWidgets.QMainWindow):
 
         if self.efile:
 
-            msg_box = QtGui.QMessageBox()
+            msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle('Choose positions')
-            msg_box.setIcon(QtGui.QMessageBox.Warning)
-            msg_box.setStandardButtons(QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok)
-            h5_button = msg_box.button(QtGui.QMessageBox.Ok)
+            msg_box.setIcon(QtWidgets.QMessageBox.Warning)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ok)
+            h5_button = msg_box.button(QtWidgets.QMessageBox.Ok)
             h5_button.setText('Use h5-File')
-            gui_button = msg_box.button(QtGui.QMessageBox.Cancel)
+            gui_button = msg_box.button(QtWidgets.QMessageBox.Cancel)
             gui_button.setText('Use nominal')
-            msg_box.setEscapeButton(QtGui.QMessageBox.Cancel)
-            msg_box.setDefaultButton(QtGui.QMessageBox.Ok)
+            msg_box.setEscapeButton(QtWidgets.QMessageBox.Cancel)
+            msg_box.setDefaultButton(QtWidgets.QMessageBox.Ok)
             msg_box.setInformativeText('The following h5-File is loaded:\n%s\nUse the positions from the h5-File or '
                                        'use the nominal GUI positions?\n\nYou can abort this procedure in the next '
                                        'window no matter what you choose.\n\nFYI: If PVs are offline, this window can '
                                        'freeze for some seconds (see console output).' % self.window.pathLine.text())
 
-            retval = msg_box.exec_()
+            retval = msg_box.exec()
             # Cancel = 4194304
             # Ok = 1024
             if retval == 1024:
@@ -1033,12 +1037,12 @@ class Helper(QtWidgets.QMainWindow):
                                             'DMM-Offset = %.2f or lower. Please recalculate!' % \
                                             (self.bl_pvs['DMM_Z_2']['destination'], dmm_off_needed)
 
-                        info_box = QtGui.QMessageBox()
+                        info_box = QtWidgets.QMessageBox()
                         info_box.setWindowTitle('Recalculate DMM-Offset.')
-                        info_box.setIcon(QtGui.QMessageBox.Warning)
-                        info_box.setStandardButtons(QtGui.QMessageBox.Ok)
+                        info_box.setIcon(QtWidgets.QMessageBox.Warning)
+                        info_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
                         info_box.setText(wrong_pd_off_text)
-                        info_box.exec_()
+                        info_box.exec()
                         return
 
             else:
@@ -1101,7 +1105,7 @@ class Helper(QtWidgets.QMainWindow):
 
         # show a message box to select axes and to confirm movement
         dial = device_selection.DeviceDialog(self.bl_pvs)
-        if dial.exec_() == QtWidgets.QDialog.Accepted:
+        if dial.exec() == QtWidgets.QDialog.Accepted:
             dial.move_selected_devices()
 
         # delete the destination keys for the next pass
@@ -1341,4 +1345,4 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main = Helper()
     main.window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
