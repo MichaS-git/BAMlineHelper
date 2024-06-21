@@ -125,7 +125,7 @@ class DeviceDialog(QtWidgets.QDialog):
 
         pos = 0
         for box in self.findChildren(QtWidgets.QCheckBox):
-            if box.checkState():
+            if box.isChecked():
                 if 'switch' in self.device_list[box.objectName()].keys():
                     for i in self.findChildren(QtWidgets.QComboBox, box.objectName() + 'dest'):
                         pos = i.currentText()
@@ -134,6 +134,6 @@ class DeviceDialog(QtWidgets.QDialog):
                         pos = i.text()
 
                 caput(self.device_list[box.objectName()]['PV'], pos)
-                # print("caput(%s, %s)" % (self.device_list[box.objectName()]['PV'], pos))
+                #print("caput(%s, %s)" % (self.device_list[box.objectName()]['PV'], pos))
                 # wait a bit because it is not good to send requests in such high frequency to the VME-IOC
                 time.sleep(0.1)

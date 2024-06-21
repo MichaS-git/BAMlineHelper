@@ -23,6 +23,8 @@ import xraydb
 import pyqtgraph as pg
 from epics import caget
 
+import paramiko
+
 pg.setConfigOption('background', 'w')  # background color white (2D)
 pg.setConfigOption('foreground', 'k')  # foreground color black (2D)
 pg.setConfigOptions(antialias=True)  # enable antialiasing for prettier plots
@@ -117,6 +119,7 @@ class Helper(QtWidgets.QMainWindow):
         super(Helper, self).__init__(parent)
         self.window = window_loader.load_ui(os.path.join(DIR_PATH, 'helper.ui'))
         self.dmm_window = window_loader.load_ui(os.path.join(DIR_PATH, 'dmm_parameter.ui'))
+        self.expIOC_window = window_loader.load_ui(os.path.join(DIR_PATH, 'expIOC_checker.ui'))
         self.window.installEventFilter(self)
 
         # class variables
@@ -209,15 +212,21 @@ class Helper(QtWidgets.QMainWindow):
         self.window.h5_next.clicked.connect(lambda: self.h5_navigate(direction=2))
         self.window.h5_last.clicked.connect(lambda: self.h5_navigate(direction=3))
 
-        # new
+        # the DMM-Parameter window
         self.window.actionDMM_Param.triggered.connect(self.dmm_parameter)
+
+        # the experiment IOC window
+        self.window.actionExpIOC.triggered.connect(self.exp_ioc)
 
     def quit_app(self):
 
-        """Quits the application."""
+        """Quits the application and closes extra windows if they are open."""
 
         if self.dmm_window:
             self.dmm_window.close()
+
+        if self.expIOC_window:
+            self.expIOC_window.close()
 
     def eventFilter(self, obj, event):
 
@@ -772,11 +781,13 @@ class Helper(QtWidgets.QMainWindow):
         self.block_signals_to_bl_spectrum(block=True)
 
         # the source, get the ring current and the magnetic field; if PVs are not accessible, use default values
-        ring_current = caget(self.bl_pvs['Bessy_Ringstrom']['PV'])
+        #ring_current = caget(self.bl_pvs['Bessy_Ringstrom']['PV'])
+        ring_current = 0
         if not ring_current:
             ring_current = 300.
         self.window.ring_current.setValue(ring_current)
-        magnetic_field = caget(self.bl_pvs['MagneticFluxDensity']['PV'])
+        #magnetic_field = caget(self.bl_pvs['MagneticFluxDensity']['PV'])
+        magnetic_field = 0
         if not magnetic_field:
             magnetic_field = 7.
         self.window.magnetic_field.setValue(magnetic_field)
@@ -888,7 +899,7 @@ class Helper(QtWidgets.QMainWindow):
         """Load all the motor-names and motor-pv's from the bamline_main.xsubst file (only available at BAMline)."""
 
         xsubsts = '/messung/eve/xml/xsubst/bamline_main.xsubst', '/messung/rfa/rfa.xsubst', '/messung/ct/ct.xsubst'\
-            , '/messung/eve/xml/xsubst/ringstrom.xsubst', '/messung/eve/xml/xsubst/bamline_topo.xsubst'
+            , '/messung/eve/xml/xsubst/ringstrom.xsubst', '/messung/eve/xml/xsubst/bamline_6G.xsubst', '/messung/eve/xml/xsubst/bamline_sample_tower.xsubst'
 
         # indicator for the main BL devices, 'exp' will be added to other devices to mark them for later use
         main_device = True
@@ -1338,6 +1349,79 @@ class Helper(QtWidgets.QMainWindow):
         self.dmm_window.layer_pairs_mob4c.setValue(180)
         self.dmm_window.dmm_2d_mob4c.setValue(5.736)
         self.dmm_window.dmm_gamma_mob4c.setValue(0.4)
+
+    def exp_ioc(self):
+
+        """ Opens the menu for the Experiment IOC and gets infos about it"""
+
+        self.expIOC_window.show()
+
+        self.expIOC_window.checkStatus_btn.clicked.connect(self.check_child_process)
+        self.expIOC_window.checkBox_pegas_CtTopo.stateChanged.connect(self.edit_stcmd('< motor.cmd.SMCpegasus_CtTopo'))
+
+    def edit_stcmd(self, comment):
+        print('executing')
+        # Check if file exists
+        if not os.path.isfile('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd'):
+            print(f"File {'/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd'} does not exist.")
+            return
+
+        # Read the file
+        with open('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd', 'r') as file:
+            lines = file.readlines()
+
+        # Modify the file content
+        with (open('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd', 'w') as file):
+            for line in lines:
+                if comment in line:
+                    print(line)
+                    #if comment == '< motor.cmd.SMCpegasus_CtTopo' and not self.expIOC_window.checkBox_pegas_CtTopo.isChecked():
+                     #   if not line.strip().startswith('#'):
+                      #      line = '# ' + line
+                    #if comment == '< motor.cmd.SMCpegasus_CtTopo' and self.expIOC_window.checkBox_pegas_CtTopo.isChecked():
+                     #   if line.strip().startswith('#'):
+                      #      line = line.lstrip('#').lstrip()
+                file.write(line)
+
+    @Slot()
+    def check_child_process(self):
+        user = self.expIOC_window.user_input.text()
+        host = self.expIOC_window.host_input.text()
+        port = self.expIOC_window.port_input.text()
+
+        if not user or not host or not port:
+            QtWidgets.QMessageBox.warning(self, 'Input Error', 'Please provide all inputs.')
+            return
+
+        try:
+            # Set up SSH connection
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(hostname=host, username=user)
+
+            command = f"""
+            CHILD_PID=$(ps -e -o pid,ppid,cmd | grep 'procServ' | grep -v 'grep' | awk '{{print $1}}')
+            if [ -z "$CHILD_PID" ]; then
+                echo "Not found."
+                exit 1
+            fi
+            CHILD_NAME=$(ps -p $CHILD_PID -o cmd= | awk -F/ '{{print $NF}}')
+            echo "$CHILD_NAME"
+            """
+
+            stdin, stdout, stderr = ssh.exec_command(command)
+            result = stdout.read().decode() + stderr.read().decode()
+
+            ssh.close()
+
+            if "Not found." in result:
+                self.expIOC_window.status_line.setText("IOC down")
+            else:
+                self.expIOC_window.status_line.setText("IOC running")
+                self.expIOC_window.ioc_line.setText(result)
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, 'Error', str(e))
 
 
 if __name__ == '__main__':
