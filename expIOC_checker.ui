@@ -6,240 +6,287 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>612</width>
-    <height>538</height>
+    <width>535</width>
+    <height>765</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>9</x>
-     <y>20</y>
-     <width>169</width>
-     <height>29</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>16</pointsize>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>Experiment - IOC</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>9</x>
-     <y>66</y>
-     <width>32</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>User:</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="user_input">
-   <property name="geometry">
-    <rect>
-     <x>57</x>
-     <y>66</y>
-     <width>125</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>bl</string>
-   </property>
-   <property name="readOnly">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_3">
-   <property name="geometry">
-    <rect>
-     <x>216</x>
-     <y>66</y>
-     <width>32</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Host:</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="host_input">
-   <property name="geometry">
-    <rect>
-     <x>254</x>
-     <y>66</y>
-     <width>125</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>bragg</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_4">
-   <property name="geometry">
-    <rect>
-     <x>414</x>
-     <y>66</y>
-     <width>30</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Port:</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="port_input">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>66</y>
-     <width>125</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>20000</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_5">
-   <property name="geometry">
-    <rect>
-     <x>9</x>
-     <y>109</y>
-     <width>42</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="layoutDirection">
-    <enum>Qt::LeftToRight</enum>
-   </property>
-   <property name="text">
-    <string>Status:</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="status_line">
-   <property name="geometry">
-    <rect>
-     <x>57</x>
-     <y>109</y>
-     <width>125</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <property name="readOnly">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_6">
-   <property name="geometry">
-    <rect>
-     <x>216</x>
-     <y>109</y>
-     <width>27</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>IOC:</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="ioc_line">
-   <property name="geometry">
-    <rect>
-     <x>254</x>
-     <y>109</y>
-     <width>125</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <property name="readOnly">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="checkStatus_btn">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>109</y>
-     <width>87</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Check Status</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_7">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>150</y>
-     <width>211</width>
-     <height>29</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>loaded Devices </string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="checkBox_pegas_CtTopo">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>190</y>
-     <width>141</width>
-     <height>24</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Micos_CT / TOPO</string>
-   </property>
-  </widget>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="7">
+    <widget class="QLineEdit" name="port_input">
+     <property name="text">
+      <string>20000</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="7">
+    <widget class="QPushButton" name="checkStatus_btn">
+     <property name="text">
+      <string>Check Status</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="4" colspan="2">
+    <widget class="QLineEdit" name="host_input">
+     <property name="text">
+      <string>bragg</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="2">
+    <widget class="QLabel" name="label_8">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>mainly CT / TOPO</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="3">
+    <widget class="QCheckBox" name="checkBox_elcomat3k">
+     <property name="text">
+      <string>Autokollimator ELCOMAT 3000</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="4" colspan="3">
+    <widget class="QLabel" name="label_9">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>mainly RFA</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="4" colspan="4">
+    <widget class="QCheckBox" name="checkBox_mcs2_Rfa">
+     <property name="text">
+      <string>SmarAct MCS2 1 Piezo + Trigger</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0" colspan="2">
+    <widget class="QCheckBox" name="checkBox_pico33">
+     <property name="text">
+      <string>Micos PiCo33 Piezos</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="2">
+    <widget class="QCheckBox" name="checkBox_elettraOven">
+     <property name="text">
+      <string>Elettra Induction furnace</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="3" colspan="2">
+    <widget class="QPushButton" name="readDevices_btn">
+     <property name="text">
+      <string>Read Devices</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0" colspan="2">
+    <widget class="QCheckBox" name="checkBox_mcs2_CtTopo">
+     <property name="text">
+      <string>SmarAct MCS2 2 Piezos</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="4">
+    <widget class="QCheckBox" name="checkBox_antonPaar">
+     <property name="text">
+      <string>Anton Paar oven (Eurotherm 2k)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="user_input">
+     <property name="text">
+      <string>bl</string>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <widget class="QLabel" name="label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>16</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Experiment - IOC</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="4" colspan="4">
+    <widget class="QCheckBox" name="checkBox_piHexapod">
+     <property name="text">
+      <string>PI - Hexapod</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="6">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Port:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="4" colspan="4">
+    <widget class="QCheckBox" name="checkBox_zebra">
+     <property name="text">
+      <string>Zebra - Kiste</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="text">
+      <string>Status:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2" colspan="2">
+    <widget class="QLabel" name="label_6">
+     <property name="text">
+      <string>IOC:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0" colspan="2">
+    <widget class="QCheckBox" name="checkBox_mmc100">
+     <property name="text">
+      <string>Micronix MMC100 Piezos</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>User:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="4" colspan="4">
+    <widget class="QCheckBox" name="checkBox_pegas_Rfa">
+     <property name="text">
+      <string>Micos-Axes (PEGAS@Window)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="4" colspan="2">
+    <widget class="QLineEdit" name="ioc_line">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLineEdit" name="status_line">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <widget class="QLabel" name="label_7">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>loaded Devices </string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2" colspan="2">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Host:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" colspan="2">
+    <widget class="QCheckBox" name="checkBox_jfa">
+     <property name="text">
+      <string>CT-Table-Z (JfA-Schlitten)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0" colspan="3">
+    <widget class="QCheckBox" name="checkBox_pegas_CtTopo">
+     <property name="text">
+      <string>Micos-Axes (PEGAS@CT/TOPO)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="5" colspan="2">
+    <widget class="QPushButton" name="writeDevices_btn">
+     <property name="text">
+      <string>Write Devices</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
