@@ -4,7 +4,7 @@
 import sys
 import os
 
-from PySide2 import QtWidgets, QtUiTools, QtCore
+from PySide6 import QtWidgets, QtUiTools, QtCore
 
 import pyqtgraph as pg
 

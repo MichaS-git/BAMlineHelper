@@ -1737,15 +1737,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
     </property>
     <addaction name="actionDMM_Param"/>
    </widget>
-   <widget class="QMenu" name="menuExperiment_IOC">
-    <property name="title">
-     <string>Experiment-IOC</string>
-    </property>
-    <addaction name="actionExpIOC"/>
-   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSettings"/>
-   <addaction name="menuExperiment_IOC"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionBLMap">
@@ -1777,6 +1770,9 @@ li.checked::marker { content: &quot;\2612&quot;; }
    </property>
   </action>
   <action name="actionExpIOC">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Menu</string>
    </property>

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.10
 # -*- coding:utf-8 -*-
 
 import os
@@ -21,7 +21,7 @@ import xrt.backends.raycing.sources as rs
 import xraydb
 
 import pyqtgraph as pg
-from epics import caget
+from epics import caget, caput, camonitor, camonitor_clear
 
 import paramiko
 
@@ -215,9 +215,6 @@ class Helper(QtWidgets.QMainWindow):
         # the DMM-Parameter window
         self.window.actionDMM_Param.triggered.connect(self.dmm_parameter)
 
-        # the experiment IOC window
-        self.window.actionExpIOC.triggered.connect(self.exp_ioc)
-
     def quit_app(self):
 
         """Quits the application and closes extra windows if they are open."""
@@ -238,6 +235,7 @@ class Helper(QtWidgets.QMainWindow):
             # comment in to block quitting the app with X
             # event.ignore()
             return True
+
         # if the main window was already closed, return nothing (prevents "main window not found" error on exit)
         if not self.window:
             return 0
@@ -942,8 +940,8 @@ class Helper(QtWidgets.QMainWindow):
                         self.bl_pvs[name.group(1)]['exp'] = 'yes'
 
         # add some additional PVs that are not directly present in the bamline_main.xsubst
-        self.bl_pvs['dmmBeamOffset'] = {'PV': self.bl_pvs['DMM_Energy']['PV'] + 'y2.B'}
-        self.bl_pvs['dcmBeamOffset'] = {'PV': self.bl_pvs['DCM_Energy']['PV'] + 'z2.B'}
+        self.bl_pvs['dmmBeamOffset'] = {'PV': self.bl_pvs['DMM_Energy']['PV'] + 'dmmOff'}
+        self.bl_pvs['dcmBeamOffset'] = {'PV': self.bl_pvs['DCM_Energy']['PV'] + 'dcmOff'}
         self.bl_pvs['dcmCrystalOrientation'] = {'PV': self.bl_pvs['DCM_Energy']['PV'] + 'selectCrystal'}
         self.bl_pvs['dcmCrystalOrientation']['switch'] = 'yes'
 
@@ -1349,225 +1347,6 @@ class Helper(QtWidgets.QMainWindow):
         self.dmm_window.layer_pairs_mob4c.setValue(180)
         self.dmm_window.dmm_2d_mob4c.setValue(5.736)
         self.dmm_window.dmm_gamma_mob4c.setValue(0.4)
-
-    def exp_ioc(self):
-
-        """ Opens the menu for the Experiment IOC"""
-
-        self.expIOC_window.show()
-
-        # get the current state of the st.cmd IOC-file
-        self.explore_stcmd()
-
-        self.expIOC_window.checkStatus_btn.clicked.connect(self.check_child_process)
-        self.expIOC_window.readDevices_btn.clicked.connect(self.explore_stcmd)
-        self.expIOC_window.writeDevices_btn.clicked.connect(self.edit_stcmd)
-
-    def explore_stcmd(self):
-
-        # Check if file exists
-        if not os.path.isfile('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd'):
-            print(f"File {'/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd'} does not exist.")
-            return
-
-        # Read the file
-        with open('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd', 'r') as file:
-            lines = file.readlines()
-
-        for line in lines:
-            if '< motor.cmd.SMCpegasus_CtTopo' in line and line[0] == '#':
-                self.expIOC_window.checkBox_pegas_CtTopo.setChecked(0)
-            elif '< motor.cmd.SMCpegasus_CtTopo' in line and line[0] != '#':
-                self.expIOC_window.checkBox_pegas_CtTopo.setChecked(1)
-
-            if '< motor.cmd.SMCpegasus_Rfa' in line and line[0] == '#':
-                self.expIOC_window.checkBox_pegas_Rfa.setChecked(0)
-            elif '< motor.cmd.SMCpegasus_Rfa' in line and line[0] != '#':
-                self.expIOC_window.checkBox_pegas_Rfa.setChecked(1)
-
-            if '< smaractmcs2.iocsh_CtTopo' in line and line[0] == '#':
-                self.expIOC_window.checkBox_mcs2_CtTopo.setChecked(0)
-            elif '< smaractmcs2.iocsh_CtTopo' in line and line[0] != '#':
-                self.expIOC_window.checkBox_mcs2_CtTopo.setChecked(1)
-
-            if '< smaractmcs2.iocsh_Rfa' in line and line[0] == '#':
-                self.expIOC_window.checkBox_mcs2_Rfa.setChecked(0)
-            elif '< smaractmcs2.iocsh_Rfa' in line and line[0] != '#':
-                self.expIOC_window.checkBox_mcs2_Rfa.setChecked(1)
-
-            if '< asyn.cmd.Elcomat3000' in line and line[0] == '#':
-                self.expIOC_window.checkBox_elcomat3k.setChecked(0)
-            elif '< asyn.cmd.Elcomat3000' in line and line[0] != '#':
-                self.expIOC_window.checkBox_elcomat3k.setChecked(1)
-
-            if '< elettra_furnace_stream.cmd' in line and line[0] == '#':
-                self.expIOC_window.checkBox_elettraOven.setChecked(0)
-            elif '< elettra_furnace_stream.cmd' in line and line[0] != '#':
-                self.expIOC_window.checkBox_elettraOven.setChecked(1)
-
-            if '< eurotherm2k_modbus.cmd' in line and line[0] == '#':
-                self.expIOC_window.checkBox_antonPaar.setChecked(0)
-            elif '< eurotherm2k_modbus.cmd' in line and line[0] != '#':
-                self.expIOC_window.checkBox_antonPaar.setChecked(1)
-
-            if '< MCBL2805.cmd' in line and line[0] == '#':
-                self.expIOC_window.checkBox_jfa.setChecked(0)
-            elif '< MCBL2805.cmd' in line and line[0] != '#':
-                self.expIOC_window.checkBox_jfa.setChecked(1)
-
-            if '< motor.cmd.CN30' in line and line[0] == '#':
-                self.expIOC_window.checkBox_pico33.setChecked(0)
-            elif '< motor.cmd.CN30' in line and line[0] != '#':
-                self.expIOC_window.checkBox_pico33.setChecked(1)
-
-            if '< motor.cmd.mmc100' in line and line[0] == '#':
-                self.expIOC_window.checkBox_mmc100.setChecked(0)
-            elif '< motor.cmd.mmc100' in line and line[0] != '#':
-                self.expIOC_window.checkBox_mmc100.setChecked(1)
-
-            if '< motor.cmd.PIHexapod' in line and line[0] == '#':
-                self.expIOC_window.checkBox_piHexapod.setChecked(0)
-            elif '< motor.cmd.PIHexapod' in line and line[0] != '#':
-                self.expIOC_window.checkBox_piHexapod.setChecked(1)
-
-            if '< zebra.iocsh' in line and line[0] == '#':
-                self.expIOC_window.checkBox_zebra.setChecked(0)
-            elif '< zebra.iocsh' in line and line[0] != '#':
-                self.expIOC_window.checkBox_zebra.setChecked(1)
-
-    def edit_stcmd(self):
-        # Check if file exists
-        if not os.path.isfile('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd'):
-            print(f"File {'/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd'} does not exist.")
-            return
-
-        # Read the file
-        with open('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd', 'r') as file:
-            lines = file.readlines()
-
-        # Modify the file content
-        with open('/soft/epics/IOC/experimentIOC/iocBoot/iocexperimentIOC/st.cmd', 'w') as file:
-            for line in lines:
-                if '< motor.cmd.SMCpegasus_CtTopo' in line or 'motorUtilInit("PEGAS:miocb0102")' in line:
-                    if self.expIOC_window.checkBox_pegas_CtTopo.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_pegas_CtTopo.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< motor.cmd.SMCpegasus_Rfa' in line or 'motorUtilInit("PEGAS:miocb0101")' in line or \
-                        'set_pass0_restoreFile("PEGAS0101.sav")' in line or 'set_pass1_restoreFile("PEGAS0101.sav")' \
-                        in line or 'create_monitor_set("PEGAS0101.req", 30)' in line:
-                    if self.expIOC_window.checkBox_pegas_Rfa.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_pegas_Rfa.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< smaractmcs2.iocsh_CtTopo' in line or 'motorUtilInit("smarAct:")' in line:
-                    if self.expIOC_window.checkBox_mcs2_CtTopo.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_mcs2_CtTopo.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< smaractmcs2.iocsh_Rfa' in line or 'motorUtilInit("smarAct:")' in line or \
-                        'set_pass0_restoreFile("justHlmLlm.sav")' in line or 'set_pass1_restoreFile("justHlmLlm.sav")'\
-                        in line or 'create_monitor_set("justHlmLlm.req", 30, "P=smarAct:, N=1")' in line:
-                    if self.expIOC_window.checkBox_mcs2_Rfa.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_mcs2_Rfa.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< asyn.cmd.Elcomat3000' in line:
-                    if self.expIOC_window.checkBox_elcomat3k.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_elcomat3k.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< elettra_furnace_stream.cmd' in line:
-                    if self.expIOC_window.checkBox_elettraOven.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_elettraOven.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< eurotherm2k_modbus.cmd' in line or 'set_pass0_restoreFile("eurotherm2k.sav")' in line or \
-                        'set_pass1_restoreFile("eurotherm2k.sav")' in line or \
-                        'create_monitor_set("eurotherm2k.req", 30, "P=EUROTHERM, Q=2K")' in line:
-                    if self.expIOC_window.checkBox_antonPaar.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_antonPaar.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< MCBL2805.cmd' in line or 'motorUtilInit("faulhaber:")' in line:
-                    if self.expIOC_window.checkBox_jfa.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_jfa.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< motor.cmd.CN30' in line or 'motorUtilInit("PiCo33:")' in line:
-                    if self.expIOC_window.checkBox_pico33.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_pico33.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< motor.cmd.mmc100' in line or 'motorUtilInit("micronix:")' in line:
-                    if self.expIOC_window.checkBox_mmc100.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_mmc100.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< motor.cmd.PIHexapod' in line or 'motorUtilInit("PIF206:")' in line:
-                    if self.expIOC_window.checkBox_piHexapod.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_piHexapod.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                if '< zebra.iocsh' in line:
-                    if self.expIOC_window.checkBox_zebra.isChecked() and line[0] == '#':
-                        line = line.lstrip('#').lstrip()
-                    elif not self.expIOC_window.checkBox_zebra.isChecked() and line[0] != '#':
-                        line = '#' + line
-
-                # write the line
-                file.write(line)
-
-    @Slot()
-    def check_child_process(self):
-        user = self.expIOC_window.user_input.text()
-        host = self.expIOC_window.host_input.text()
-        port = self.expIOC_window.port_input.text()
-
-        if not user or not host or not port:
-            QtWidgets.QMessageBox.warning(self, 'Input Error', 'Please provide all inputs.')
-            return
-
-        try:
-            # Set up SSH connection
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(hostname=host, username=user)
-
-            command = f"""
-            CHILD_PID=$(ps -e -o pid,ppid,cmd | grep 'procServ' | grep -v 'grep' | awk '{{print $1}}')
-            if [ -z "$CHILD_PID" ]; then
-                echo "Not found."
-                exit 1
-            fi
-            CHILD_NAME=$(ps -p $CHILD_PID -o cmd= | awk -F/ '{{print $NF}}')
-            echo "$CHILD_NAME"
-            """
-
-            stdin, stdout, stderr = ssh.exec_command(command)
-            result = stdout.read().decode() + stderr.read().decode()
-
-            ssh.close()
-
-            if "Not found." in result:
-                self.expIOC_window.status_line.setText("IOC down")
-            else:
-                self.expIOC_window.status_line.setText("IOC running")
-                self.expIOC_window.ioc_line.setText(result)
-
-        except Exception as e:
-            QtWidgets.QMessageBox.critical(self, 'Error', str(e))
 
 
 if __name__ == '__main__':
